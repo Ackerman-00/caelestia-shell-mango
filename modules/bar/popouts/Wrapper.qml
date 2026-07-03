@@ -1,0 +1,226 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Controls
+import Quickshell
+import Quickshell.Wayland
+import qs.components
+import qs.services
+import qs.config
+import qs.modules.controlcenter
+import qs.modules.windowinfo
+
+Item {
+    id: root
+
+    required property ShellScreen screen
+
+    readonly property real nonAnimWidth: x > 0 || hasCurrent ? children.find(c => c.shouldBeActive)?.implicitWidth ?? content.implicitWidth : 0
+    readonly property real nonAnimHeight: children.find(c => c.shouldBeActive)?.implicitHeight ?? content.implicitHeight
+    readonly property Item current: (content.item as Content)?.current ?? null
+    readonly property int trayMenuDepth: ((current as StackView)?.depth ?? 0)
+
+    property alias currentName: popoutState.currentName
+    property real currentCenter
+    property alias hasCurrent: popoutState.hasCurrent
+    readonly property PopoutState popState: popoutState
+
+    property string detachedMode
+    property string queuedMode
+    readonly property bool isDetached: detachedMode.length > 0
+
+    property int animLength: Appearance.anim.durations.normal
+    property list<real> animCurve: Appearance.anim.curves.emphasized
+
+    function detach(mode: string): void {
+        animLength = Appearance.anim.durations.large;
+        if (mode === "winfo") {
+            detachedMode = mode;
+        } else {
+            queuedMode = mode;
+            detachedMode = "any";
+        }
+        focus = true;
+    }
+
+    function close(): void {
+        hasCurrent = false;
+        animCurve = Appearance.anim.curves.emphasizedAccel;
+        animLength = Appearance.anim.durations.normal;
+        detachedMode = "";
+        animCurve = Appearance.anim.curves.emphasized;
+    }
+
+    visible: width > 0 && height > 0
+    clip: true
+
+    implicitWidth: nonAnimWidth
+    implicitHeight: nonAnimHeight
+
+    focus: hasCurrent
+    Keys.onEscapePressed: {
+        // Forward escape to password popout if active, otherwise close
+        if (currentName === "wirelesspassword" && content.item) {
+            const passwordPopout = (content.item as Content)?.children.find(c => c.name === "wirelesspassword");
+            if (passwordPopout && passwordPopout.item) {
+                passwordPopout.item.closeDialog();
+                return;
+            }
+        }
+        close();
+    }
+
+    Keys.onPressed: event => {
+        // Don't intercept keys when password popout is active - let it handle them
+        if (currentName === "wirelesspassword") {
+            event.accepted = false;
+        }
+    }
+
+    PopoutState {
+        id: popoutState
+
+        onDetachRequested: mode => root.detach(mode)
+    }
+
+    // HyprlandFocusGrab - Disabled for MangoWC
+    Item {
+        property bool active: root.isDetached
+        // property var windows: [QsWindow.window]  // Not used
+        signal cleared()
+        
+        // Manual close would need to be implemented differently
+    }
+
+    Binding {
+        when: root.isDetached
+
+        target: QsWindow.window
+        property: "WlrLayershell.keyboardFocus"
+        value: WlrKeyboardFocus.OnDemand
+    }
+
+    Binding {
+        when: root.hasCurrent && root.currentName === "wirelesspassword"
+
+        target: QsWindow.window
+        property: "WlrLayershell.keyboardFocus"
+        value: WlrKeyboardFocus.OnDemand
+    }
+
+    Comp {
+        id: content
+
+        shouldBeActive: root.hasCurrent && !root.detachedMode
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+
+        sourceComponent: Content {
+            popouts: popoutState
+        }
+    }
+
+    Comp {
+        shouldBeActive: root.detachedMode === "winfo"
+        anchors.centerIn: parent
+
+        sourceComponent: WindowInfo {
+            screen: root.screen
+            client: Hypr.activeToplevel
+        }
+    }
+
+    Comp {
+        shouldBeActive: root.detachedMode === "any"
+        anchors.centerIn: parent
+
+        sourceComponent: ControlCenter {
+            function close(): void {
+                root.close();
+            }
+
+            screen: root.screen
+            active: root.queuedMode
+        }
+    }
+
+    Behavior on x {
+        Anim {
+            duration: root.animLength
+            easing.bezierCurve: root.animCurve
+        }
+    }
+
+    Behavior on y {
+        enabled: root.implicitWidth > 0
+
+        Anim {
+            duration: root.animLength
+            easing.bezierCurve: root.animCurve
+        }
+    }
+
+    Behavior on implicitWidth {
+        Anim {
+            duration: root.animLength
+            easing.bezierCurve: root.animCurve
+        }
+    }
+
+    Behavior on implicitHeight {
+        enabled: root.implicitWidth > 0
+
+        Anim {
+            duration: root.animLength
+            easing.bezierCurve: root.animCurve
+        }
+    }
+
+    component Comp: Loader {
+        id: comp
+
+        property bool shouldBeActive
+
+        active: false
+        opacity: 0
+
+        states: State {
+            name: "active"
+            when: comp.shouldBeActive
+
+            PropertyChanges {
+                comp.opacity: 1
+                comp.active: true
+            }
+        }
+
+        transitions: [
+            Transition {
+                from: ""
+                to: "active"
+
+                SequentialAnimation {
+                    PropertyAction {
+                        property: "active"
+                    }
+                    Anim {
+                        property: "opacity"
+                    }
+                }
+            },
+            Transition {
+                from: "active"
+                to: ""
+
+                SequentialAnimation {
+                    Anim {
+                        property: "opacity"
+                    }
+                    PropertyAction {
+                        property: "active"
+                    }
+                }
+            }
+        ]
+    }
+}
