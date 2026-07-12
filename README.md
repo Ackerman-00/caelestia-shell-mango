@@ -155,7 +155,6 @@ bind=SUPER,l,spawn_shell,caelestia-shell ipc call lock lock
 bind=SUPER+SHIFT,Print,spawn_shell,caelestia-shell ipc call picker open
 bind=CTRL+ALT,w,spawn_shell,find ~/Pictures/wallpapers -type f \( -name "*.jpg" -o -name "*.png" -o -name "*.jpeg" \) | shuf -n1 | xargs -r caelestia-shell ipc call wallpaper set
 bind=CTRL+ALT,Delete,spawn_shell,caelestia-shell ipc call drawers toggle session
-bind=NONE,F5,spawn_shell,caelestia-shell ipc call audio cycleOutput
 ```
 
 > `spawn_shell` routes through `/bin/sh -c`, ensuring shell pipelines and argument handling work correctly. `caelestia-shell` is resolved via `env.conf` PATH.
