@@ -110,19 +110,27 @@ Scope {
 
     IpcHandler {
         function toggle(drawer: string): void {
-            if (list().split("\n").includes(drawer)) {
-                if (root.hasFullscreen && ["launcher", "session", "dashboard"].includes(drawer))
-                    return;
-                const visibilities = Visibilities.getForActive();
-                visibilities[drawer] = !visibilities[drawer];
-            } else {
+            const drawers = ["launcher", "dashboard", "utilities", "sidebar", "session", "osd"];
+            if (!drawers.includes(drawer)) {
                 console.warn(lc, `Drawer "${drawer}" does not exist`);
+                return;
             }
+            if (root.hasFullscreen && ["launcher", "session", "dashboard"].includes(drawer))
+                return;
+            const visibilities = Visibilities.getForActive();
+            visibilities[drawer] = !visibilities[drawer];
         }
 
         function list(): string {
+            return ["launcher", "dashboard", "utilities", "sidebar", "session", "osd"].join("\n");
+        }
+
+        function isOpen(drawer: string): string {
+            const drawers = ["launcher", "dashboard", "utilities", "sidebar", "session", "osd"];
+            if (!drawers.includes(drawer))
+                return "unknown";
             const visibilities = Visibilities.getForActive();
-            return Object.keys(visibilities).filter(k => typeof visibilities[k] === "boolean").join("\n");
+            return visibilities[drawer] ? "1" : "0";
         }
 
         target: "drawers"

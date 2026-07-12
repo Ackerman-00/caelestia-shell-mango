@@ -126,7 +126,21 @@ Item {
                 }
             }
 
-            Component.onCompleted: forceActiveFocus()
+            focus: true
+
+            Component.onCompleted: {
+                if (Wallpapers.launcherSearch) {
+                    search.text = Wallpapers.launcherSearch;
+                    Wallpapers.launcherSearch = "";
+                }
+                focusTimer.start();
+            }
+
+            Timer {
+                id: focusTimer
+                interval: 0
+                onTriggered: search.forceActiveFocus()
+            }
 
             Connections {
                 function onLauncherChanged(): void {

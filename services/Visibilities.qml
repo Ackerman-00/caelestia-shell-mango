@@ -9,10 +9,13 @@ Singleton {
     property var bars: new Map()
 
     function load(screen: ShellScreen, visibilities: DrawerVisibilities): void {
-        screens.set(Hypr.monitorFor(screen), visibilities);
+        screens.set(screen.name, visibilities);
     }
 
     function getForActive(): DrawerVisibilities {
-        return screens.get(Hypr.focusedMonitor);
+        let result = screens.get(Mango.focusedOutput);
+        if (!result && screens.size > 0)
+            result = screens.values().next().value;
+        return result;
     }
 }

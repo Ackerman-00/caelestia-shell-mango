@@ -11,8 +11,10 @@ Singleton {
 
     // MangoWC workspaces (tags) via Wayland protocols
     readonly property var toplevels: ({
-        values: ToplevelManager.toplevels || []
+        values: root._toplevelArray
     }) // Real window list with .values accessor
+
+    property var _toplevelArray: [] // Converted JS array from toplevel model
     
     readonly property var workspaces: ({
         values: parsedTags
@@ -72,7 +74,7 @@ Singleton {
             specialWorkspace: { name: "" }
         },
         monitor: focusedMonitor,
-        toplevels: { values: ToplevelManager.toplevels }
+        toplevels: root.toplevels
     }) // Current focused workspace
 
     readonly property int activeWsId: activeTagNumber
@@ -131,51 +133,44 @@ Singleton {
     signal configReloaded
 
     function dispatch(request: string): void {
-        // MangoWC dispatch via mmsg -d
+        // MangoWC dispatch via mmsg dispatch
         const parts = request.split(" ");
         const command = parts[0];
         const args = parts.slice(1);
         
-        // Map Hyprland commands to MangoWC mmsg commands
         if (command === "killwindow" || command === "closewindow" || command === "killclient") {
-            Quickshell.execDetached(["mmsg", "-d", "killclient"]);
+            Quickshell.execDetached(["mmsg", "dispatch", "killclient"]);
         } else if (command === "togglefloating") {
-            Quickshell.execDetached(["mmsg", "-d", "togglefloating"]);
+            Quickshell.execDetached(["mmsg", "dispatch", "togglefloating"]);
         } else if (command === "togglefullscreen" || command === "fullscreen") {
-            Quickshell.execDetached(["mmsg", "-d", "togglefullscreen"]);
+            Quickshell.execDetached(["mmsg", "dispatch", "togglefullscreen"]);
         } else if (command === "pin") {
-            Quickshell.execDetached(["mmsg", "-d", "togglepin"]);
+            Quickshell.execDetached(["mmsg", "dispatch", "togglepin"]);
         } else if (command === "workspace" || command === "tag") {
-            // Switch to workspace/tag
             const tagNum = parseInt(args[0]);
             if (!isNaN(tagNum)) {
-                Quickshell.execDetached(["mmsg", "-t", tagNum.toString()]);
+                Quickshell.execDetached(["mmsg", "dispatch", "view," + tagNum.toString()]);
                 activeTagNumber = tagNum;
             }
         } else if (command === "movetoworkspace") {
-            // Move window to tag
             const tagNum = parseInt(args[0].replace(/^[^0-9]*/, ""));
             if (!isNaN(tagNum)) {
-                Quickshell.execDetached(["mmsg", "-s", "-t", tagNum + "+"]);
+                Quickshell.execDetached(["mmsg", "dispatch", "sendtotag," + tagNum.toString()]);
             }
         } else if (command === "togglespecialworkspace") {
             console.warn("MangoWC: Special workspaces not supported");
         } else if (command.startsWith("resize")) {
-            // resizewin
-            Quickshell.execDetached(["mmsg", "-d", "resizewin," + args.join(",")]);
+            Quickshell.execDetached(["mmsg", "dispatch", "resizewin," + args.join(",")]);
         } else if (command.startsWith("move")) {
-            // movewin
-            Quickshell.execDetached(["mmsg", "-d", "movewin," + args.join(",")]);
+            Quickshell.execDetached(["mmsg", "dispatch", "movewin," + args.join(",")]);
         } else if (command === "focusdir") {
-            Quickshell.execDetached(["mmsg", "-d", "focusdir," + args[0]]);
+            Quickshell.execDetached(["mmsg", "dispatch", "focusdir," + args[0]]);
         } else if (command === "cyclelayout") {
-            // Cycle through layouts
-            Quickshell.execDetached(["mmsg", "-d", "cyclelayout"]);
+            Quickshell.execDetached(["mmsg", "dispatch", "cyclelayout"]);
         } else {
-            // Try as direct dispatch
             const fullCmd = [command, ...args].join(",");
             console.log("MangoWC: Dispatching:", fullCmd);
-            Quickshell.execDetached(["mmsg", "-d", fullCmd]);
+            Quickshell.execDetached(["mmsg", "dispatch", fullCmd]);
         }
     }
 
@@ -219,137 +214,65 @@ Singleton {
         parsedTags = tags;
     }
     
-    // Poll tag state periodically
+    // Poll tag state and focused client periodically
     Timer {
-        interval: 200 // Poll every 200ms for faster response
+        interval: 200
         running: true
         repeat: true
         onTriggered: {
-            tagStateProcess.running = false;
-            tagStateProcess.running = true;
-            focusedClientProcess.running = false;
-            focusedClientProcess.running = true;
-            focusedClientGeometryProcess.running = false;
-            focusedClientGeometryProcess.running = true;
-            focusedClientFloatingProcess.running = false;
-            focusedClientFloatingProcess.running = true;
-            focusedClientFullscreenProcess.running = false;
-            focusedClientFullscreenProcess.running = true;
+            // Convert toplevel model to JS array (supports .filter, .find, etc.)
+            const model = ToplevelManager.toplevels;
+            const arr = [];
+            if (model) {
+                const count = model.count || 0;
+                for (let i = 0; i < count; i++) {
+                    const item = model.get ? model.get(i) : model[i];
+                    if (item) arr.push(item);
+                }
+            }
+            root._toplevelArray = arr;
+
+            tagQuery.running = false;
+            tagQuery.running = true;
+            clientQuery.running = false;
+            clientQuery.running = true;
         }
     }
-    
+
     Process {
-        id: tagStateProcess
-        command: ["mmsg", "-g", "-t"]
+        id: tagQuery
+        command: ["mmsg", "get", "all-tags"]
         stdout: StdioCollector {
             onStreamFinished: root.parseTagState(text)
         }
     }
-    
+
     Process {
-        id: focusedClientProcess
-        command: ["mmsg", "-g", "-c"]
+        id: clientQuery
+        command: ["mmsg", "get", "focusing-client"]
         stdout: StdioCollector {
-            onStreamFinished: {
-                const lines = text.trim().split('\n');
-                for (const line of lines) {
-                    if (line.includes(" title ")) {
-                        root.focusedClientTitle = line.split(" title ")[1] || "";
-                    } else if (line.includes(" appid ")) {
-                        root.focusedClientAppId = line.split(" appid ")[1] || "";
-                    }
-                }
-            }
+            onStreamFinished: root.parseFocusedClient(text)
         }
     }
-    
-    Process {
-        id: focusedClientGeometryProcess
-        command: ["mmsg", "-g", "-x"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const lines = text.trim().split('\n');
-                // Debug disabled: console.log("MangoWC: Geometry update:", text.substring(0, 100));
-                for (const line of lines) {
-                    const parts = line.split(/\s+/);
-                    if (parts.length >= 3) {
-                        const prop = parts[1];
-                        const value = parseInt(parts[2]);
-                        if (prop === "x") root.focusedClientX = value;
-                        else if (prop === "y") root.focusedClientY = value;
-                        else if (prop === "width") root.focusedClientWidth = value;
-                        else if (prop === "height") root.focusedClientHeight = value;
-                    }
-                }
-            }
-        }
-    }
-    
-    Process {
-        id: focusedClientFloatingProcess
-        command: ["mmsg", "-g", "-f"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const lines = text.trim().split('\n');
-                for (const line of lines) {
-                    if (line.includes(" floating ")) {
-                        root.focusedClientFloating = line.split(" floating ")[1] === "1";
-                    }
-                }
-            }
-        }
-    }
-    
-    Process {
-        id: focusedClientFullscreenProcess
-        command: ["mmsg", "-g", "-m"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const lines = text.trim().split('\n');
-                for (const line of lines) {
-                    if (line.includes(" fullscreen ")) {
-                        root.focusedClientFullscreen = line.split(" fullscreen ")[1] === "1";
-                    }
-                }
-            }
-        }
-    }
-    
+
     function parseTagState(output: string): void {
         try {
-            const lines = output.trim().split('\n');
-            let focusedTagMask = 0;
-            let visibleTagMask = 0;
+            const data = JSON.parse(output);
+            const monitors = data.all_tags ?? [];
+            let activeTag = 1;
             const occupiedMap = {};
-            
-            for (const line of lines) {
-                // Format 1: HDMI-A-2 tag 1 1 1 1
-                // Parts: output, "tag", number, occupied, active, urgent
-                const parts = line.split(/\s+/);
-                
-                if (parts.length >= 5 && parts[1] === "tag") {
-                    const tagNum = parseInt(parts[2]);
-                    const occupied = parts[3] === "1";
-                    occupiedMap[tagNum] = occupied;
-                }
-                // Format 2: HDMI-A-2 tags 000000111 000000001 000000000
-                // Bitfields: visible, focused, urgent
-                else if (parts.length >= 4 && parts[1] === "tags") {
-                    visibleTagMask = parts[2];
-                    focusedTagMask = parts[3];
-                    
-                    // Find the focused tag (rightmost bit that is '1')
-                    for (let i = focusedTagMask.length - 1; i >= 0; i--) {
-                        if (focusedTagMask[i] === '1') {
-                            const tagNum = focusedTagMask.length - i;
-                            activeTagNumber = tagNum;
-                            break;
-                        }
+
+            for (const mon of monitors) {
+                for (const tag of (mon.tags ?? [])) {
+                    occupiedMap[tag.index] = tag.client_count > 0;
+                    if (tag.is_active) {
+                        activeTag = tag.index;
                     }
                 }
             }
-            
-            // Rebuild the tags array to trigger QML property updates
+
+            activeTagNumber = activeTag;
+
             const newTags = [];
             for (let i = 1; i <= 9; i++) {
                 newTags.push({
@@ -366,6 +289,30 @@ Singleton {
             parsedTags = newTags;
         } catch (e) {
             console.error("MangoWC: Error parsing tag state:", e);
+        }
+    }
+
+    function parseFocusedClient(output: string): void {
+        try {
+            const data = JSON.parse(output);
+            root.focusedClientTitle = data.title ?? "";
+            root.focusedClientAppId = data.appid ?? "";
+            root.focusedClientX = data.x ?? 0;
+            root.focusedClientY = data.y ?? 0;
+            root.focusedClientWidth = data.width ?? 0;
+            root.focusedClientHeight = data.height ?? 0;
+            root.focusedClientFloating = data.is_floating ?? false;
+            root.focusedClientFullscreen = data.is_fullscreen ?? false;
+        } catch (e) {
+            // No focused client — reset to defaults
+            root.focusedClientTitle = "";
+            root.focusedClientAppId = "";
+            root.focusedClientX = 0;
+            root.focusedClientY = 0;
+            root.focusedClientWidth = 0;
+            root.focusedClientHeight = 0;
+            root.focusedClientFloating = false;
+            root.focusedClientFullscreen = false;
         }
     }
 

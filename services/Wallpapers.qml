@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Caelestia
 import Caelestia.Models
 import qs.services
 import qs.config
@@ -19,6 +20,7 @@ Searcher {
     property string previewPath
     property string actualCurrent
     property bool previewColourLock
+    property string launcherSearch: ""
 
     function setWallpaper(path: string): void {
         actualCurrent = path;
@@ -57,6 +59,13 @@ Searcher {
 
         function list(): string {
             return root.list.map(w => w.path).join("\n");
+        }
+
+        function openMenu(): void {
+            root.launcherSearch = ">wallpaper ";
+            const vis = Visibilities.getForActive();
+            if (vis)
+                vis.launcher = true;
         }
 
         target: "wallpaper"

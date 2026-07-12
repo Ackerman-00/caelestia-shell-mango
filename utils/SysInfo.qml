@@ -35,7 +35,11 @@ Singleton {
             root.osId = fd("ID");
             root.osIdLike = fd("ID_LIKE").split(" ");
 
-            const logo = Quickshell.iconPath(fd("LOGO"), true);
+            let logo = Quickshell.iconPath(fd("LOGO"), true);
+            if (!logo && fd("LOGO")) {
+                const name = fd("LOGO");
+                logo = `file:///run/current-system/sw/share/icons/hicolor/scalable/apps/${name}.svg`;
+            }
             if (Config.general.logo === "caelestia") {
                 root.osLogo = Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`);
                 root.isDefaultLogo = true;

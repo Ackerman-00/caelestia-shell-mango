@@ -1,357 +1,366 @@
-<h1 align=center>caelestia-shell (MangoWC Port)</h1>
+<h1 align="center">caelestia-shell <sub>MangoWC Port</sub></h1>
 
-<div align=center>
+<div align="center">
 
-![GitHub last commit](https://img.shields.io/github/last-commit/caelestia-dots/shell?style=for-the-badge&labelColor=101418&color=9ccbfb)
-![GitHub Repo stars](https://img.shields.io/github/stars/caelestia-dots/shell?style=for-the-badge&labelColor=101418&color=b9c8da)
-![GitHub repo size](https://img.shields.io/github/repo-size/caelestia-dots/shell?style=for-the-badge&labelColor=101418&color=d3bfe6)
-[![Ko-Fi donate](https://img.shields.io/badge/donate-kofi?style=for-the-badge&logo=ko-fi&logoColor=ffffff&label=ko-fi&labelColor=101418&color=f16061&link=https%3A%2F%2Fko-fi.com%2Fsoramane)](https://ko-fi.com/soramane)
-[![Discord invite](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdiscordapp.com%2Fapi%2Finvites%2FBGDCFCmMBk%3Fwith_counts%3Dtrue&query=approximate_member_count&style=for-the-badge&logo=discord&logoColor=ffffff&label=discord&labelColor=101418&color=96f1f1&link=https%3A%2F%2Fdiscord.gg%2FBGDCFCmMBk)](https://discord.gg/BGDCFCmMBk)
+![License](https://img.shields.io/github/license/caelestia-dots/shell?style=for-the-badge&labelColor=101418&color=9ccbfb)
+![Quickshell](https://img.shields.io/badge/quickshell-0.3-64DBB5?style=for-the-badge&labelColor=101418)
+![wlroots](https://img.shields.io/badge/wlroots-0.20-7B68EE?style=for-the-badge&labelColor=101418)
 
 </div>
 
 https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
-## About This Fork
+---
 
-This is a community port of the beautiful Caelestia shell to work with **MangoWC compositor** instead of Hyprland! 🎉
+## Install
 
-The original shell was designed exclusively for Hyprland, but through some careful adaptation, it now runs smoothly on MangoWC while maintaining all the core functionality and gorgeous aesthetics that make Caelestia special.
+### Build Dependencies
 
-**This is a personal project** that I'm actively maintaining and improving. If you find this port useful and want to support continued development and maintenance, I'd be grateful for any contributions! Beer money is always appreciated 🍺
+| Dependency | Needed for |
+|------------|-----------|
+| `cmake` (≥ 3.19), `ninja` | build system |
+| `gcc` or `clang` | C++20 compiler |
+| Qt6 (base + declarative) | Qt6 core, gui, qml, quick, network, dbus, sql, concurrent |
+| Qt6 shadertools | shader compilation |
+| `libqalculate` (dev) | in-app calculator |
+| `libpipewire` (dev) | audio control |
+| `libaubio` (dev) | audio beat detection |
+| `libcava` or `cava` (dev) | audio visualiser |
+| `material-symbols` font | icon set |
+| `caskaydia-cove-nerd` font | monospace font |
 
-<details>
-<summary>Support via Cryptocurrency</summary>
+Install the **development** packages for each dependency via your distro's package manager.
 
-If you'd like to buy me a beer (or coffee!) for the work on this port, here are my crypto addresses:
+### Runtime Dependencies
 
-- **Bitcoin (BTC)**: `1C1CrcRjPCYXzoXYLtCg8Zu7e1DZ4nyKDL`
-- **USDT (TRX)**: `TR4vtxKGmxYJsXQDF2sfLx8W6pztyZKWVT`
-- **Ethereum (ETH ERC20)**: `0xeb2031515c8ddacc94e5d0ceba6d22016e6de3da`
-- **BINANCE PAY ID**: `765117963`
+| Package | Notes |
+|---------|-------|
+| `quickshell-git` | must be git version, not latest tagged |
+| `mangowc` | with `mmsg` IPC support |
+| `libpipewire` | audio control |
+| `networkmanager` | network info |
+| `lm-sensors` | hardware monitoring |
+| `libcava` | audio visualiser |
+| `swappy` | screenshot editor |
+| `wl-clipboard` | clipboard access (`wl-copy`, `wl-paste`) |
+| `libnotify` | desktop notifications (`notify-send`) |
+| `procps` | process monitoring (`pidof`) |
+| `util-linux` | disk info (`lsblk`) |
+| `libxml2` | XKB layout parsing (`xmllint`) |
+| `fprintd` | fingerprint authentication |
+| `systemd` | session management (`loginctl`, `systemctl`) |
+| `polkit` | privilege escalation (`pkexec`) |
+| `fish` | default shell for calculator integration |
+| `bash` | used throughout for shell commands |
 
-Every contribution helps keep this project maintained and supports future improvements. Thank you! 🙏
+> **Note:** Keyboard layout switching uses `setxkbmap` (tool-agnostic). No Hyprland dependencies remain.
 
-</details>
+### Optional
 
-### What Changed?
+| Package | Notes |
+|---------|-------|
+| `libqalculate` | in-app calculator |
+| `aubio` | audio beat detection |
+| `ddcutil` | external monitor control |
+| `app2unit` | convert desktop entries to units |
+| `caelestia-cli` | CLI helper |
+| `gpu-screen-recorder` | screen recording (monitored via `pidof`) |
+| `brightnessctl` | backlight control (needed if not using `ddcutil`) |
 
-- **MangoWC Integration**: Complete rewrite of the compositor backend to use MangoWC's `mmsg` IPC instead of Hyprland's socket protocol
-- **Window Management**: Replaced Hyprland's native window tracking with Wayland's `ToplevelManager` protocol for workspace and window information
-- **Input Masking**: Carefully tuned Region-based input masks to maintain click-through transparency on the desktop while keeping panels and bars interactive
-- **Blur Control**: Disabled blur effects for crisp rendering with MangoWC's layer shell
-- **Feature Adaptation**: Disabled features that rely on Hyprland-specific protocols (like screencopy-based window previews and gpu-screen-recorder integration)
+### System-wide Install
 
-### What Still Works?
-
-Pretty much everything! 🚀
-
-- ✅ All panels (bar, dashboard, utilities, OSD, sidebar)
-- ✅ Hover detection and auto-hide behaviors
-- ✅ Workspaces and window tracking
-- ✅ Media controls (MPRIS)
-- ✅ Network, battery, brightness, audio controls
-- ✅ Launcher with app search
-- ✅ Notification system
-- ✅ Lock screen
-- ✅ System tray
-- ✅ Wallpaper management
-- ✅ Color scheme switching
-
-### What Doesn't Work (Yet)?
-
-- ❌ Window preview thumbnails (MangoWC's screencopy protocol needs work)
-- ❌ Screen recording feature (gpu-screen-recorder configuration needs adaptation)
-
-## Components
-
--   Widgets: [`Quickshell`](https://quickshell.outfoxxed.me)
--   Compositor: [`MangoWC`](https://github.com/jvl-13/MangoWC) (originally [`Hyprland`](https://hyprland.org))
--   Original Dots: [`caelestia`](https://github.com/caelestia-dots)
-
-## Special Thanks
-
-**Huge shoutout and massive thanks to [@Soramane](https://github.com/soramane)** and the entire Caelestia project for creating such an incredible, polished, and beautiful shell! This port wouldn't exist without their amazing work. If you love this shell, please consider [supporting them on Ko-Fi](https://ko-fi.com/soramane)! 💙
-
-Also huge thanks to:
-- [@outfoxxed](https://github.com/outfoxxed) for creating and maintaining Quickshell
-- The MangoWC developers for building a solid wlroots compositor
-- The Hyprland discord community for ongoing inspiration and help
-
-## Installation
-
-> [!IMPORTANT]
-> This MangoWC port requires manual installation. The AUR package and Nix flake from the original project are **not compatible** with this fork as they're designed for Hyprland.
-
-### Prerequisites for MangoWC
-
-Before installing the shell, make sure you have MangoWC properly set up:
-
-1. **MangoWC Compositor**: Install and configure MangoWC ([GitHub repo](https://github.com/jvl-13/MangoWC))
-2. **MangoWC Layer Rules**: Add these to your `~/.config/mango/rule.conf` to disable blur on shell surfaces:
-   ```
-   noblur:1 caelestia
-   ```
-
-### Manual Installation (MangoWC)
-
-Dependencies:
-
--   [`caelestia-cli`](https://github.com/caelestia-dots/cli) (optional but recommended)
--   [`quickshell-git`](https://quickshell.outfoxxed.me) - **must be the git version**, not the latest tagged version
--   `mangowc` - The MangoWC compositor with `mmsg` IPC support
--   [`ddcutil`](https://github.com/rockowitz/ddcutil)
--   [`brightnessctl`](https://github.com/Hummer12007/brightnessctl)
--   [`app2unit`](https://github.com/Vladimir-csp/app2unit)
--   [`libcava`](https://github.com/LukashonakV/cava)
--   [`networkmanager`](https://networkmanager.dev)
--   [`lm-sensors`](https://github.com/lm-sensors/lm-sensors)
--   [`fish`](https://github.com/fish-shell/fish-shell)
--   [`aubio`](https://github.com/aubio/aubio)
--   [`libpipewire`](https://pipewire.org)
--   `glibc`
--   `qt6-declarative`
--   `gcc-libs`
--   [`material-symbols`](https://fonts.google.com/icons)
--   [`caskaydia-cove-nerd`](https://www.nerdfonts.com/font-downloads)
--   [`swappy`](https://github.com/jtheoof/swappy)
--   [`libqalculate`](https://github.com/Qalculate/libqalculate)
--   [`bash`](https://www.gnu.org/software/bash)
--   `qt6-base`
--   `qt6-declarative`
-
-Build dependencies:
-
--   [`cmake`](https://cmake.org)
--   [`ninja`](https://github.com/ninja-build/ninja)
-
-To install the shell manually, install all dependencies and clone this repo (or your fork). Then build and install using `cmake`.
+Builds the C++ QML plugin and installs everything system-wide.
 
 ```sh
-# Clone the repository
-git clone https://github.com/YOUR-USERNAME/caelestia.git
-cd caelestia
+git clone https://github.com/Ackerman-00/caelestia-shell-mango
+cd caelestia-shell-mango
 
-# Build and install
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/
+cmake -B build -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=/ \
+  -DINSTALL_QSCONFDIR=/etc/xdg/quickshell/caelestia
+
 cmake --build build
 sudo cmake --install build
 ```
 
-This will install the shell to `/etc/xdg/quickshell/caelestia` systemwide.
-
-> [!TIP]
-> You can customise the installation location via the `cmake` flags `INSTALL_LIBDIR`, `INSTALL_QMLDIR` and
-> `INSTALL_QSCONFDIR` for the libraries (the beat detector), QML plugin and Quickshell config directories
-> respectively. If changing the library directory, remember to set the `CAELESTIA_LIB_DIR` environment
-> variable to the custom directory when launching the shell.
->
-> e.g. installing to `~/.config/quickshell/caelestia` for easy local changes:
->
-> ```sh
-> mkdir -p ~/.config/quickshell/caelestia
-> cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/ -DINSTALL_QSCONFDIR=~/.config/quickshell/caelestia
-> cmake --build build
-> sudo cmake --install build
-> sudo chown -R $USER ~/.config/quickshell/caelestia
-> ```
-
-## Usage
-
-The shell can be started via `qs -c caelestia` or by launching Quickshell with the config path.
-
-### Starting with MangoWC
-
-To autostart the shell with MangoWC, add this to your MangoWC config:
-
-```
-exec-once = qs -c caelestia
-```
-
-Or if using caelestia-cli:
-
-```
-exec-once = caelestia shell -d
-```
-
-### Shortcuts/IPC
-
-> [!NOTE]
-> MangoWC doesn't support Hyprland's global shortcuts via DBus. You'll need to configure keybinds directly in your MangoWC config using `mmsg` commands or by invoking the caelestia CLI.
-
-Example MangoWC keybinds for common shell functions:
-
-```
-# Toggle launcher
-bind = SUPER, SPACE, exec, caelestia shell drawers toggle launcher
-
-# Toggle dashboard
-bind = SUPER, D, exec, caelestia shell drawers toggle dashboard
-
-# Toggle utilities
-bind = SUPER, U, exec, caelestia shell drawers toggle utilities
-
-# Lock screen
-bind = SUPER, L, exec, caelestia shell lock lock
-
-# Screenshot picker
-bind = , PRINT, exec, caelestia shell picker open
-```
-
-All IPC commands can be accessed via `caelestia shell ...` if you have caelestia-cli installed. For example:
+### Nix Build
 
 ```sh
-caelestia shell mpris getActive trackTitle
+git clone https://github.com/Ackerman-00/caelestia-shell-mango
+cd caelestia-shell-mango
+
+nix build .#caelestia-shell
 ```
 
-The list of IPC commands can be shown via `caelestia shell -s`:
+The built binary is at `result/bin/caelestia-shell`. Run directly:
 
-```
-$ caelestia shell -s
-target drawers
-  function toggle(drawer: string): void
-  function list(): string
-target notifs
-  function clear(): void
-target lock
-  function lock(): void
-  function unlock(): void
-  function isLocked(): bool
-target mpris
-  function playPause(): void
-  function getActive(prop: string): string
-  function next(): void
-  function stop(): void
-  function play(): void
-  function list(): string
-  function pause(): void
-  function previous(): void
-target picker
-  function openFreeze(): void
-  function open(): void
-target wallpaper
-  function set(path: string): void
-  function get(): string
-  function list(): string
+```sh
+./result/bin/caelestia-shell -d
 ```
 
-### PFP/Wallpapers
+#### System-wide install (nix profile)
 
-The profile picture for the dashboard is read from the file `~/.face`, so to set
-it you can copy your image to there or set it via the dashboard.
+```sh
+nix profile install .#caelestia-shell
+```
 
-The wallpapers for the wallpaper switcher are read from `~/Pictures/Wallpapers`
-by default. To change it, change the wallpapers path in `~/.config/caelestia/shell.json`.
+This installs `caelestia-shell` to `~/.nix-profile/bin/`, placing it in your PATH on NixOS. Verify with `which caelestia-shell`.
 
-To set the wallpaper, you can use the command `caelestia wallpaper`. Use `caelestia wallpaper -h` for more info about
-the command.
+> **env.conf:** After nix profile install, ensure `~/.nix-profile/bin` is in MangoWM's PATH (see [env.conf](#envconf) below).
+
+---
+
+## MangoWM Config
+
+### env.conf
+
+`~/.config/mango/env.conf` must include `caelestia-shell` in PATH so keybinds and autostart can find it:
+
+```conf
+env=PATH,/home/ackerman/.nix-profile/bin:/run/current-system/sw/bin:/home/ackerman/.local/bin:/usr/bin:/bin
+env=QML2_IMPORT_PATH,/home/ackerman/.config/caelestia/install/lib/qt6/qml
+env=XDG_CURRENT_DESKTOP,mango
+env=XDG_SESSION_DESKTOP,mango
+env=XDG_SESSION_TYPE,wayland
+env=SDL_VIDEODRIVER,wayland
+```
+
+> Adjust PATH prefix to wherever `caelestia-shell` is installed (nix profile, cmake system-wide, or local build).
+
+### Autostart
+
+Add to `~/.config/mango/config.conf`:
+
+```
+exec-once = caelestia-shell -d
+```
+
+### Blur Rule
+
+Add to `~/.config/mango/rule.conf` to disable blur on shell surfaces:
+
+```
+noblur:1 caelestia
+```
+
+### Keybinds
+
+Add to `~/.config/mango/mango_bind.conf`:
+
+```conf
+# ─── CAELESTIA SHELL IPC ───────────────────────────────────
+bind=SUPER,a,spawn_shell,caelestia-shell ipc call drawers toggle launcher
+bind=SUPER,v,spawn_shell,caelestia-shell ipc call drawers toggle sidebar
+bind=SUPER,comma,spawn_shell,caelestia-shell ipc call controlCenter open
+bind=SUPER,w,spawn_shell,caelestia-shell ipc call wallpaper openMenu
+bind=SUPER,p,spawn_shell,caelestia-shell ipc call drawers toggle dashboard
+bind=SUPER,l,spawn_shell,caelestia-shell ipc call lock lock
+bind=SUPER+SHIFT,Print,spawn_shell,caelestia-shell ipc call picker open
+bind=CTRL+ALT,w,spawn_shell,find ~/Pictures/wallpapers -type f \( -name "*.jpg" -o -name "*.png" -o -name "*.jpeg" \) | shuf -n1 | xargs -r caelestia-shell ipc call wallpaper set
+bind=CTRL+ALT,Delete,spawn_shell,caelestia-shell ipc call drawers toggle session
+bind=NONE,F5,spawn_shell,caelestia-shell ipc call audio cycleOutput
+```
+
+> `spawn_shell` routes through `/bin/sh -c`, ensuring shell pipelines and argument handling work correctly. `caelestia-shell` is resolved via `env.conf` PATH.
+
+---
+
+## IPC Reference
+
+All IPC commands go through `caelestia-shell` (in PATH after system-wide install):
+
+```sh
+caelestia-shell ipc call <target> <function> [args...]
+```
+
+### drawers
+
+Toggle launcher, dashboard, sidebar, utilities, session, and OSD panels.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `toggle` | `toggle(drawer: string)` | Toggle a drawer (`launcher`, `dashboard`, `utilities`, `sidebar`, `session`, `osd`) |
+| `list` | `list(): string` | List available drawer names |
+| `isOpen` | `isOpen(drawer: string): string` | Check if a drawer is open (`"1"` / `"0"` / `"unknown"`) |
+
+### controlCenter
+
+Open the settings/control center window.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `open` | `open(): void` | Open control center |
+
+### wallpaper
+
+Manage wallpapers.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `get` | `get(): string` | Get current wallpaper path |
+| `set` | `set(path: string)` | Set wallpaper by path |
+| `list` | `list(): string` | List all available wallpaper paths |
+| `openMenu` | `openMenu(): void` | Open launcher with wallpaper picker |
+
+### notifs
+
+Notification controls.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `clear` | `clear(): void` | Clear all notifications |
+| `toggleDnd` | `toggleDnd(): void` | Toggle Do Not Disturb |
+| `enableDnd` | `enableDnd(): void` | Enable Do Not Disturb |
+| `disableDnd` | `disableDnd(): void` | Disable Do Not Disturb |
+| `isDndEnabled` | `isDndEnabled(): bool` | Check DND status |
+
+### mpris
+
+Media player control.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `play` | `play(): void` | Play |
+| `pause` | `pause(): void` | Pause |
+| `playPause` | `playPause(): void` | Toggle play/pause |
+| `next` | `next(): void` | Next track |
+| `previous` | `previous(): void` | Previous track |
+| `stop` | `stop(): void` | Stop |
+| `list` | `list(): string` | List available players |
+| `getActive` | `getActive(prop: string): string` | Get property from active player (`"trackTitle"`, `"identity"`, etc.) |
+
+### audio
+
+Audio device control.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `cycleOutput` | `cycleOutput(): void` | Cycle to next audio output sink |
+
+### brightness
+
+Monitor brightness control.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `get` | `get(): real` | Get active monitor brightness |
+| `getFor` | `getFor(query: string): real` | Get brightness for specific monitor |
+| `set` | `set(value: string): string` | Set brightness (`0.5`, `+10%`, `10%-`) |
+| `setFor` | `setFor(query: string, value: string): string` | Set brightness for specific monitor |
+
+### lock
+
+Session lock.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `lock` | `lock(): void` | Lock session |
+| `unlock` | `unlock(): void` | Unlock session |
+| `isLocked` | `isLocked(): bool` | Check if locked |
+
+### picker
+
+Area screenshot picker.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `open` | `open(): void` | Open picker |
+| `openFreeze` | `openFreeze(): void` | Open with frozen screen |
+| `openClip` | `openClip(): void` | Open and copy to clipboard |
+| `openFreezeClip` | `openFreezeClip(): void` | Open with freeze + clipboard |
+
+### toaster
+
+Send toast notifications.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `info` | `info(title, message, icon)` | Info toast |
+| `success` | `success(title, message, icon)` | Success toast |
+| `warn` | `warn(title, message, icon)` | Warning toast |
+| `error` | `error(title, message, icon)` | Error toast |
+
+### gameMode
+
+Toggle game mode (disables animations, blur, shadows, gaps).
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `toggle` | `toggle(): void` | Toggle game mode |
+| `enable` | `enable(): void` | Enable game mode |
+| `disable` | `disable(): void` | Disable game mode |
+| `isEnabled` | `isEnabled(): bool` | Check game mode status |
+
+### idleInhibitor
+
+Inhibit idle/screensaver.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `toggle` | `toggle(): void` | Toggle idle inhibit |
+| `enable` | `enable(): void` | Enable idle inhibit |
+| `disable` | `disable(): void` | Disable idle inhibit |
+| `isEnabled` | `isEnabled(): bool` | Check inhibit status |
+
+### mango
+
+MangoWC compositor bridge.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `refreshDevices` | `refreshDevices(): void` | Refresh input devices |
+
+---
+
+## Configuration
+
+Edit `~/.config/caelestia/shell.json` (must be created manually).
+
+### Paths
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `paths.wallpaperDir` | `~/Pictures/Wallpapers` | Wallpaper directory |
+| `paths.lyricsDir` | `~/Music/lyrics/` | MPRIS lyrics directory |
+| `paths.sessionGif` | `root:/assets/kurukuru.gif` | Session menu animation |
+| `paths.mediaGif` | `root:/assets/bongocat.gif` | Media player animation |
+
+### PFP
+
+Profile picture for the dashboard is read from `~/.face`.
+
+---
 
 ## Updating
 
-To update your installation, pull the latest changes and rebuild:
+### CMake install
 
 ```sh
-cd /path/to/caelestia
+cd caelestia-shell-mango
 git pull
 cmake --build build
 sudo cmake --install build
 ```
 
-Then restart Quickshell to load the updated shell.
-
-## Configuring
-
-All configuration options should be put in `~/.config/caelestia/shell.json`. This file is _not_ created by
-default, you must create it manually.
-
-### Home Manager Module
-
-For NixOS users, a home manager module is also available.
-
-<details><summary><code>home.nix</code></summary>
-
-```nix
-programs.caelestia = {
-  enable = true;
-  systemd = {
-    enable = false; # if you prefer starting from your compositor
-    target = "graphical-session.target";
-    environment = [];
-  };
-  settings = {
-    bar.status = {
-      showBattery = false;
-    };
-    paths.wallpaperDir = "~/Images";
-  };
-  cli = {
-    enable = true; # Also add caelestia-cli to path
-    settings = {
-      theme.enableGtk = false;
-    };
-  };
-};
-```
-
-The module automatically adds Caelestia shell to the path with **full functionality**. The CLI is not required, however you have the option to enable and configure it.
-
-</details>
-
-## FAQ
-
-### Why MangoWC instead of Hyprland?
-
-Great question! Some folks prefer MangoWC's wlroots-based approach, simpler architecture, or just want to try something different. This port makes Caelestia accessible to the MangoWC community while keeping all the beautiful design intact.
-
-### Can I use this with Hyprland?
-
-Nope! This fork is specifically adapted for MangoWC. If you want to use Hyprland, grab the [original Caelestia shell](https://github.com/caelestia-dots/shell) instead - it's fantastic!
-
-### Window previews don't work!
-
-Yeah, that's a known limitation. MangoWC's screencopy protocol implementation needs more work before window previews can function properly. The window info panel is still there, just without thumbnails.
-
-### Screen recording button is missing!
-
-I've disabled the screen recording feature since gpu-screen-recorder configuration for MangoWC needs adaptation. This might come in a future update!
-
-### My screen is flickering!
-
-Try tweaking MangoWC's refresh rate settings or disabling any compositor effects that might conflict with the shell's layer surfaces.
-
-### I want to make my own changes!
-
-The shell is installed to `/etc/xdg/quickshell/caelestia`. You can edit these files directly (you'll need sudo access) or copy the entire directory to `~/.config/quickshell/caelestia` for user-specific modifications. Quickshell will prefer the user config if it exists.
-
-### I want to disable XXX feature!
-
-Please read the [configuring](https://github.com/caelestia-dots/shell?tab=readme-ov-file#configuring) section in the readme.
-If there is no corresponding option, make feature request.
-
-### How do I make my colour scheme change with my wallpaper?
-
-Set a wallpaper via the launcher and set the scheme to the dynamic scheme. If you have caelestia-cli installed:
+### Nix install
 
 ```sh
-caelestia wallpaper -f <path/to/file>
-caelestia scheme set -n dynamic
+cd caelestia-shell-mango
+git pull
+nix profile upgrade caelestia-shell
 ```
 
-### My wallpapers aren't showing up in the launcher!
+Or rebuild and reinstall:
 
-The launcher pulls wallpapers from `~/Pictures/Wallpapers` by default. You can change this in the config. Additionally,
-the launcher only shows an odd number of wallpapers at one time. If you only have 2 wallpapers, consider getting more
-(or just putting one).
+```sh
+nix build .#caelestia-shell && nix profile install .#caelestia-shell
+```
 
-> [!NOTE]
-> This MangoWC port is a community effort and is **not officially affiliated** with the Caelestia project.
+Restart Quickshell after updating: `pkill quickshell && caelestia-shell -d`.
 
-## Stonks 📈
+---
 
-<a href="https://www.star-history.com/#caelestia-dots/shell&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=caelestia-dots/shell&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=caelestia-dots/shell&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=caelestia-dots/shell&type=Date" />
- </picture>
-</a>
+<div align="center">
+  <sub>MangoWC port — not affiliated with the official Caelestia project.</sub>
+</div>

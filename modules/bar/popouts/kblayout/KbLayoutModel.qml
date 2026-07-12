@@ -18,17 +18,21 @@ Item {
 
     function start() {
         _xkbXmlBase.running = true;
-        _getKbLayoutOpt.running = true;
+        _queryActiveLayout.running = true;
     }
 
     function refresh() {
         _notifiedLimit = false;
-        _getKbLayoutOpt.running = true;
+        _queryActiveLayout.running = true;
     }
 
     function switchTo(idx) {
-        _switchProc.command = ["hyprctl", "switchxkblayout", "all", String(idx)];
-        _switchProc.running = true;
+        if (idx >= 0 && idx < _layoutsModel.count) {
+            const item = _layoutsModel.get(idx);
+            const code = item.token.replace(/\(.*\)$/, "").trim();
+            Quickshell.execDetached(["setxkbmap", "-layout", code]);
+            _queryActiveLayout.running = true;
+        }
     }
 
     function _buildXmlMap(xml) {
@@ -50,7 +54,9 @@ Item {
 
         _xkbMap = map;
 
-        if (_layoutsModel.count > 0) {
+        if (_layoutsModel.count === 0) {
+            _populateFromXkbMap();
+        } else {
             const tmp = [];
             for (let i = 0; i < _layoutsModel.count; i++) {
                 const it = _layoutsModel.get(i);
@@ -62,7 +68,32 @@ Item {
             }
             _layoutsModel.clear();
             tmp.forEach(t => _layoutsModel.append(t));
-            _fetchActiveLayouts.running = true;
+        }
+        _queryActiveLayout.running = true;
+    }
+
+    function _populateFromXkbMap() {
+        const codes = Object.keys(_xkbMap);
+        const preferred = ["us", "gb", "de", "fr", "dk", "no", "se", "fi", "it", "es",
+                           "pt", "nl", "be", "ch", "jp", "kr", "cn", "tw", "ru", "ua",
+                           "pl", "cz", "sk", "hu", "ro", "bg", "gr", "tr", "br", "latam"];
+        _layoutsModel.clear();
+        let idx = 0;
+        const added = new Set();
+
+        for (const p of preferred) {
+            if (added.has(p)) continue;
+            if (codes.includes(p)) {
+                _layoutsModel.append({ layoutIndex: idx, token: p, label: _pretty(p) });
+                added.add(p);
+                idx++;
+            }
+        }
+        for (const code of codes) {
+            if (added.has(code)) continue;
+            _layoutsModel.append({ layoutIndex: idx, token: code, label: _pretty(code) });
+            added.add(code);
+            idx++;
         }
     }
 
@@ -74,26 +105,6 @@ Item {
         const region = m[2].trim();
         const code = (region.split(/[,\s-]/)[0] || region).slice(0, 2).toUpperCase();
         return `${lang} (${code})`;
-    }
-
-    function _setLayouts(raw) {
-        const parts = raw.split(",").map(s => s.trim()).filter(Boolean);
-        _layoutsModel.clear();
-
-        const seen = new Set();
-        let idx = 0;
-
-        for (const p of parts) {
-            if (seen.has(p))
-                continue;
-            seen.add(p);
-            _layoutsModel.append({
-                layoutIndex: idx,
-                token: p,
-                label: _pretty(p)
-            });
-            idx++;
-        }
     }
 
     function _rebuildVisible() {
@@ -152,70 +163,73 @@ Item {
     }
 
     Process {
-        id: _getKbLayoutOpt
+        id: _queryActiveLayout
 
-        command: ["hyprctl", "-j", "getoption", "input:kb_layout"]
+        command: ["mmsg", "get", "keyboardlayout"]
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
                     const j = JSON.parse(text);
-                    const raw = (j?.str || j?.value || "").toString().trim();
-                    if (raw.length) {
-                        model._setLayouts(raw);
-                        _fetchActiveLayouts.running = true;
-                        return;
+                    const layoutName = (j?.layout || "").trim();
+                    const code = _layoutNameToCode(layoutName);
+
+                    let foundIdx = -1;
+                    for (let i = 0; i < _layoutsModel.count; i++) {
+                        const it = _layoutsModel.get(i);
+                        const itCode = it.token.replace(/\(.*\)$/, "").trim();
+                        if (itCode === code) {
+                            foundIdx = i;
+                            break;
+                        }
                     }
-                } catch (e) {}
-                _fetchLayoutsFromDevices.running = true;
-            }
-        }
-    }
 
-    Process {
-        id: _fetchLayoutsFromDevices
-
-        command: ["hyprctl", "-j", "devices"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const dev = JSON.parse(text);
-                    const kb = dev?.keyboards?.find(k => k.main) || dev?.keyboards?.[0];
-                    const raw = (kb?.layout || "").trim();
-                    if (raw.length)
-                        model._setLayouts(raw);
-                } catch (e) {}
-                _fetchActiveLayouts.running = true;
-            }
-        }
-    }
-
-    Process {
-        id: _fetchActiveLayouts
-
-        command: ["hyprctl", "-j", "devices"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const dev = JSON.parse(text);
-                    const kb = dev?.keyboards?.find(k => k.main) || dev?.keyboards?.[0];
-                    const idx = kb?.active_layout_index ?? -1;
-
-                    model.activeIndex = idx >= 0 ? idx : -1;
-                    model.activeLabel = (idx >= 0 && idx < _layoutsModel.count) ? _layoutsModel.get(idx).label : "";
+                    model.activeIndex = foundIdx;
+                    model.activeLabel = foundIdx >= 0 ? _layoutsModel.get(foundIdx).label : "";
                 } catch (e) {
                     model.activeIndex = -1;
                     model.activeLabel = "";
                 }
-
                 model._rebuildVisible();
             }
         }
     }
 
-    Process {
-        id: _switchProc
-
-        onRunningChanged: if (!running)
-            _fetchActiveLayouts.running = true
+    function _layoutNameToCode(name) {
+        const lower = name.toLowerCase();
+        const known = {
+            "english (us)": "us",
+            "english (uk)": "gb",
+            "german": "de",
+            "french": "fr",
+            "danish": "dk",
+            "norwegian": "no",
+            "swedish": "se",
+            "finnish": "fi",
+            "italian": "it",
+            "spanish": "es",
+            "portuguese": "pt",
+            "dutch": "nl",
+            "belgian": "be",
+            "swiss": "ch",
+            "japanese": "jp",
+            "korean": "kr",
+            "chinese": "cn",
+            "russian": "ru",
+            "ukrainian": "ua",
+            "polish": "pl",
+            "czech": "cz",
+            "slovak": "sk",
+            "hungarian": "hu",
+            "romanian": "ro",
+            "bulgarian": "bg",
+            "greek": "gr",
+            "turkish": "tr",
+            "brazilian": "br",
+        };
+        for (const [key, val] of Object.entries(known)) {
+            if (lower.includes(key)) return val;
+        }
+        const m = lower.match(/^([a-z]{2})\b/);
+        return m ? m[1] : "us";
     }
 }
