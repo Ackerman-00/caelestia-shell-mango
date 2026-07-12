@@ -57,7 +57,7 @@ Item {
     implicitWidth: nonAnimWidth
     implicitHeight: nonAnimHeight
 
-    focus: hasCurrent
+    focus: hasCurrent || isDetached
     Keys.onEscapePressed: {
         // Forward escape to password popout if active, otherwise close
         if (currentName === "wirelesspassword" && content.item) {
@@ -127,6 +127,8 @@ Item {
         sourceComponent: WindowInfo {
             screen: root.screen
             client: Hypr.activeToplevel
+
+            onCloseRequested: root.close()
         }
     }
 

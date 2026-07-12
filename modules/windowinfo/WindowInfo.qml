@@ -10,6 +10,7 @@ Item {
 
     required property ShellScreen screen
     required property var client  // Changed from HyprlandToplevel
+    signal closeRequested()
 
     implicitWidth: child.implicitWidth
     implicitHeight: screen.height * Config.winfo.sizes.heightMult
@@ -42,6 +43,29 @@ Item {
 
                 Details {
                     client: root.client
+                }
+
+                StateLayer {
+                    anchors.top: parent.top
+                    anchors.right: parent.right
+                    anchors.margins: Appearance.padding.small
+
+                    implicitWidth: closeIcon.implicitWidth + Appearance.padding.small * 2
+                    implicitHeight: closeIcon.implicitHeight + Appearance.padding.small * 2
+
+                    radius: Appearance.rounding.full
+
+                    function onClicked(): void {
+                        root.closeRequested();
+                    }
+
+                    MaterialIcon {
+                        id: closeIcon
+                        anchors.centerIn: parent
+                        text: "close"
+                        font.pointSize: Appearance.font.size.large
+                        color: Colours.palette.m3onSurfaceVariant
+                    }
                 }
             }
 
