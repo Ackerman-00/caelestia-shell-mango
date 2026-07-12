@@ -14,6 +14,12 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
 ## Install
 
+### Fedora Packages (COPR)
+
+All Fedora builds for caelestia-shell and its dependencies are available in the Nexus COPR repository:
+
+📦 **[nexus COPR repository](https://copr.fedorainfracloud.org/coprs/ackerman/nexus/)**
+
 ### Build Dependencies
 
 | Dependency | Needed for |
