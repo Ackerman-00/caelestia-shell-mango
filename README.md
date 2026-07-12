@@ -118,11 +118,11 @@ This installs `caelestia-shell` to `~/.nix-profile/bin/`, placing it in your PAT
 `~/.config/mango/env.conf` only needs `caelestia-shell` in PATH so keybinds can find it:
 
 ```conf
-env=PATH,~/.nix-profile/bin:/run/current-system/sw/bin:~/.local/bin:/usr/bin:/bin
+env=PATH,/usr/bin:/bin
 ```
 
 > Caelestia sets `XDG_CURRENT_DESKTOP`, `XDG_SESSION_DESKTOP`, `SDL_VIDEODRIVER`, and `XDG_DESKTOP_PORTAL` at startup — no need to put those in env.conf.
-> Adjust PATH prefix to wherever `caelestia-shell` is installed.
+> Adjust PATH to wherever `caelestia-shell` is installed (e.g. `~/.nix-profile/bin` on NixOS).
 
 ### Autostart
 
