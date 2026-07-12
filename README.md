@@ -36,7 +36,7 @@ Install the **development** packages for each dependency via your distro's packa
 | Package | Notes |
 |---------|-------|
 | `quickshell-git` | must be git version, not latest tagged |
-| `mangowc` | with `mmsg` IPC support |
+| `mangowm` | with `mmsg` IPC support |
 | `libpipewire` | audio control |
 | `networkmanager` | network info |
 | `lm-sensors` | hardware monitoring |
@@ -51,7 +51,6 @@ Install the **development** packages for each dependency via your distro's packa
 | `app2unit` | application launcher (converts desktop entries to systemd units) |
 | `systemd` | session management (`loginctl`, `systemctl`) |
 | `polkit` | privilege escalation (`pkexec`) |
-| `fish` | default shell for calculator integration |
 | `bash` | used throughout for shell commands |
 
 > **Note:** Keyboard layout switching uses `setxkbmap` (tool-agnostic). No Hyprland dependencies remain.
@@ -66,6 +65,7 @@ Install the **development** packages for each dependency via your distro's packa
 | `caelestia-cli` | CLI helper |
 | `gpu-screen-recorder` | screen recording (monitored via `pidof`) |
 | `brightnessctl` | backlight control (needed if not using `ddcutil`) |
+| `fish` | calculator integration shell |
 
 ### System-wide Install
 
