@@ -155,6 +155,9 @@ bind=SUPER,l,spawn_shell,caelestia-shell ipc call lock lock
 bind=SUPER+SHIFT,Print,spawn_shell,caelestia-shell ipc call picker open
 bind=CTRL+ALT,w,spawn_shell,find ~/Pictures/wallpapers -type f \( -name "*.jpg" -o -name "*.png" -o -name "*.jpeg" \) | shuf -n1 | xargs -r caelestia-shell ipc call wallpaper set
 bind=CTRL+ALT,Delete,spawn_shell,caelestia-shell ipc call drawers toggle session
+bind=NONE,XF86AudioRaiseVolume,spawn_shell,caelestia-shell ipc call audio set 5%+
+bind=NONE,XF86AudioLowerVolume,spawn_shell,caelestia-shell ipc call audio set 5%-
+bind=NONE,XF86AudioMute,spawn_shell,caelestia-shell ipc call audio mute
 ```
 
 > `spawn_shell` routes through `/bin/sh -c`, ensuring shell pipelines and argument handling work correctly. `caelestia-shell` is resolved via `env.conf` PATH.
@@ -231,6 +234,9 @@ Audio device control.
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
+| `get` | `get(): real` | Get current volume (0–1) |
+| `set` | `set(value: string): string` | Set volume (`0.5`, `+0.05`, `5%+`, `5%-`, `+10%`, `10%-`) |
+| `mute` | `mute(): void` | Toggle mute |
 | `cycleOutput` | `cycleOutput(): void` | Cycle to next audio output sink |
 
 ### brightness

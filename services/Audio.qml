@@ -178,6 +178,36 @@ Singleton {
             root.cycleNextAudioOutput();
         }
 
+        function get(): real {
+            return root.volume;
+        }
+
+        function set(value: string): string {
+            let target;
+            if (value.endsWith("%-")) {
+                target = root.volume - parseFloat(value.slice(0, -2)) / 100;
+            } else if (value.endsWith("%+")) {
+                target = root.volume + parseFloat(value.slice(0, -2)) / 100;
+            } else if (value.startsWith("+") && value.endsWith("%")) {
+                target = root.volume + parseFloat(value.slice(1, -1)) / 100;
+            } else if (value.endsWith("%")) {
+                target = parseFloat(value.slice(0, -1)) / 100;
+            } else if (value.startsWith("+")) {
+                target = root.volume + parseFloat(value.slice(1));
+            } else if (value.endsWith("-")) {
+                target = root.volume - parseFloat(value.slice(0, -1));
+            } else {
+                target = parseFloat(value);
+            }
+            root.setVolume(target);
+            return `${+(root.volume * 100).toFixed(0)}%`;
+        }
+
+        function mute(): void {
+            if (root.sink?.ready && root.sink?.audio)
+                root.sink.audio.muted = !root.sink.audio.muted;
+        }
+
         target: "audio"
     }
 }
