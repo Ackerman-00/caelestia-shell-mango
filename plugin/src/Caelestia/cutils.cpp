@@ -138,4 +138,8 @@ QString CUtils::toLocalFile(const QUrl& url) const {
     return url.toLocalFile();
 }
 
+void CUtils::setEnv(const QString& name, const QString& value) const {
+    qputenv(name.toUtf8(), value.toUtf8());
+}
+
 } // namespace caelestia

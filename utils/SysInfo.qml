@@ -35,16 +35,21 @@ Singleton {
             root.osId = fd("ID");
             root.osIdLike = fd("ID_LIKE").split(" ");
 
-            let logo = Quickshell.iconPath(fd("LOGO"), true);
+            let logo = Quickshell.iconPath(fd("LOGO"), "image-missing");
             if (!logo && fd("LOGO")) {
                 const name = fd("LOGO");
-                logo = `file:///run/current-system/sw/share/icons/hicolor/scalable/apps/${name}.svg`;
+                const dirs = (Quickshell.env("XDG_DATA_DIRS") || "/usr/local/share:/usr/share").split(":");
+                for (const dir of dirs) {
+                    if (!dir) continue;
+                    logo = `file://${dir}/icons/hicolor/scalable/apps/${name}.svg`;
+                    break;
+                }
             }
             if (Config.general.logo === "caelestia") {
                 root.osLogo = Qt.resolvedUrl(`${Quickshell.shellDir}/assets/logo.svg`);
                 root.isDefaultLogo = true;
             } else if (Config.general.logo) {
-                root.osLogo = Quickshell.iconPath(Config.general.logo, true) || "file://" + Paths.absolutePath(Config.general.logo);
+                root.osLogo = Quickshell.iconPath(Config.general.logo, "image-missing") || "file://" + Paths.absolutePath(Config.general.logo);
                 root.isDefaultLogo = false;
             } else if (logo) {
                 root.osLogo = logo;

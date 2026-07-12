@@ -115,18 +115,15 @@ This installs `caelestia-shell` to `~/.nix-profile/bin/`, placing it in your PAT
 
 ### env.conf
 
-`~/.config/mango/env.conf` must include `caelestia-shell` in PATH so keybinds and autostart can find it:
+`~/.config/mango/env.conf` needs `caelestia-shell` in PATH so keybinds can find it. `XDG_CURRENT_DESKTOP` is needed for DE detection (portals, GTK theming):
 
 ```conf
-env=PATH,/home/ackerman/.nix-profile/bin:/run/current-system/sw/bin:/home/ackerman/.local/bin:/usr/bin:/bin
-env=QML2_IMPORT_PATH,/home/ackerman/.config/caelestia/install/lib/qt6/qml
 env=XDG_CURRENT_DESKTOP,mango
-env=XDG_SESSION_DESKTOP,mango
-env=XDG_SESSION_TYPE,wayland
-env=SDL_VIDEODRIVER,wayland
+env=PATH,~/.nix-profile/bin:/run/current-system/sw/bin:~/.local/bin:/usr/bin:/bin
 ```
 
-> Adjust PATH prefix to wherever `caelestia-shell` is installed (nix profile, cmake system-wide, or local build).
+> Caelestia sets `XDG_SESSION_DESKTOP`, `SDL_VIDEODRIVER`, and `XDG_DESKTOP_PORTAL` at startup — no need to put those in env.conf.
+> Adjust PATH prefix to wherever `caelestia-shell` is installed.
 
 ### Autostart
 
