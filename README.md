@@ -48,6 +48,7 @@ Install the **development** packages for each dependency via your distro's packa
 | `util-linux` | disk info (`lsblk`) |
 | `libxml2` | XKB layout parsing (`xmllint`) |
 | `fprintd` | fingerprint authentication |
+| `app2unit` | application launcher (converts desktop entries to systemd units) |
 | `systemd` | session management (`loginctl`, `systemctl`) |
 | `polkit` | privilege escalation (`pkexec`) |
 | `fish` | default shell for calculator integration |
@@ -62,7 +63,7 @@ Install the **development** packages for each dependency via your distro's packa
 | `libqalculate` | in-app calculator |
 | `aubio` | audio beat detection |
 | `ddcutil` | external monitor control |
-| `app2unit` | convert desktop entries to units |
+
 | `caelestia-cli` | CLI helper |
 | `gpu-screen-recorder` | screen recording (monitored via `pidof`) |
 | `brightnessctl` | backlight control (needed if not using `ddcutil`) |
