@@ -115,13 +115,8 @@ This installs `caelestia-shell` to `~/.nix-profile/bin/`, placing it in your PAT
 
 ### env.conf
 
-`~/.config/mango/env.conf` only needs `caelestia-shell` in PATH so keybinds can find it:
-
-```conf
-env=PATH,/usr/bin:/bin
-```
-
-> **NixOS only —** replace with:
+> **NixOS only.** MangoWM already has standard system paths in its default PATH.
+> Only needed to add nix-specific paths:
 > ```
 > env=PATH,/home/<username>/.nix-profile/bin:/run/current-system/sw/bin:~/.local/bin:/usr/bin:/bin
 > ```
