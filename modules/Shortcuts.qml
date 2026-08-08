@@ -141,7 +141,52 @@ Scope {
             WindowFactory.create();
         }
 
+        function openPane(pane: string): void {
+            WindowFactory.create(null, { active: pane });
+        }
+
         target: "controlCenter"
+    }
+
+    IpcHandler {
+        function open(): void {
+            if (root.hasFullscreen)
+                return;
+            Wallpapers.launcherSearch = ">clipboard ";
+            const vis = Visibilities.getForActive();
+            vis.launcher = true;
+        }
+
+        target: "clipboard"
+    }
+
+    IpcHandler {
+        function start(): void {
+            Recorder.start();
+        }
+
+        function startArgs(extraArgs: string): void {
+            const args = extraArgs.split(/\s+/).filter(a => a.length > 0);
+            Recorder.start(args);
+        }
+
+        function stop(): void {
+            Recorder.stop();
+        }
+
+        function togglePause(): void {
+            Recorder.togglePause();
+        }
+
+        function isRunning(): string {
+            return Recorder.running ? "1" : "0";
+        }
+
+        function isPaused(): string {
+            return Recorder.paused ? "1" : "0";
+        }
+
+        target: "record"
     }
 
     IpcHandler {

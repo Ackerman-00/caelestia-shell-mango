@@ -43,11 +43,12 @@ Variants {
             }
             property real borderThickness: hasFullscreen ? 0 : Config.border.thickness
             readonly property real borderLayoutThickness: hasFullscreen ? 0 : Config.border.thickness
+            readonly property int clampedThickness: Math.max(Config.border.minThickness, borderThickness)
             property real borderRounding: hasFullscreen ? 0 : Config.border.rounding
             property real shadowOpacity: hasFullscreen ? 0 : 0.7
             readonly property int dragMaskPadding: {
                 // Always return 0 when panels are open or focus is active
-                if (focusGrab.active || panels.popouts.isDetached)
+                if (panels.popouts.isDetached)
                     return 0;
 
                 // Always return 0 when there are windows (we'll rely on panel regions for hover)
@@ -75,12 +76,17 @@ Variants {
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
             WlrLayershell.keyboardFocus: visibilities.launcher ? WlrKeyboardFocus.Exclusive : (visibilities.session || panels.dashboard.needsKeyboard ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
 
+            // Mango drag activation relies on the Interactions hover logic only. The mask
+            // must NEVER expand for drag thresholds: dragMaskPadding can never be 0 on Mango
+            // (its workspace-window check reads Hyprland-only IPC fields), which carved ~50px
+            // dead strips over app edges (titlebars/scrollbars/bottom buttons).
             mask: Region {
-                // Capture bar + minimal edge strips for hover
-                x: bar.implicitWidth
-                y: Config.border.thickness  
-                width: win.width - bar.implicitWidth - Config.border.thickness
-                height: win.height - Config.border.thickness * 2
+                // Static: bar column + edge strips only (clamped thickness). NEVER flips to
+                // full-screen: Mango has no press IPC, so a capture would swallow app clicks.
+                x: bar.clampedWidth
+                y: win.clampedThickness
+                width: win.width - bar.clampedWidth - win.clampedThickness
+                height: win.height - win.clampedThickness * 2
                 intersection: Intersection.Xor
 
                 regions: panelRegions.instances
@@ -131,15 +137,25 @@ Variants {
                 }
             }
 
-            // HyprlandFocusGrab - Disabled for MangoWC
+            // HyprlandFocusGrab - emulated for MangoWC: full-screen input capture + manual close
             Item {
                 id: focusGrab
 
-                property bool active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || (!Config.dashboard.showOnHover && visibilities.dashboard && Config.dashboard.enabled) || (panels.popouts.currentName.startsWith("traymenu") && panels.popouts.trayMenuDepth > 1)
-                // property var windows: [win]  // Not used in MangoWC
+                property bool active: (visibilities.launcher && Config.launcher.enabled) || (visibilities.session && Config.session.enabled) || (visibilities.sidebar && Config.sidebar.enabled) || (!Config.dashboard.showOnHover && visibilities.dashboard && Config.dashboard.enabled) || (panels.popouts.hasCurrent && panels.popouts.currentName.startsWith("traymenu") && panels.popouts.trayMenuDepth > 1)
+                // property var windows: [win]  // Not used in MangoWM
                 signal cleared()
-                
-                // Manual close on click outside would need to be implemented differently for MangoWC
+
+                function clearInteraction(): void {
+                    visibilities.launcher = false;
+                    visibilities.session = false;
+                    visibilities.sidebar = false;
+                    visibilities.dashboard = false;
+                    panels.popouts.hasCurrent = false;
+                    panels.popouts.clearState();
+                    bar.closeTray();
+                }
+
+                onCleared: clearInteraction()
             }
 
             StyledRect {
@@ -185,6 +201,11 @@ Variants {
                 bar: bar
                 borderThickness: win.borderLayoutThickness
                 fullscreen: win.hasFullscreen
+
+                onOutsideClicked: {
+                    if (focusGrab.active)
+                        focusGrab.clearInteraction();
+                }
 
                 Panels {
                     id: panels

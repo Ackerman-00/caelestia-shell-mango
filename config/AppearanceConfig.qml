@@ -87,8 +87,9 @@ JsonObject {
     }
 
     component Transparency: JsonObject {
-        property bool enabled: false
-        property real base: 0.85
+        property bool enabled: true
+        property bool compositorBlur: true
+        property real base: 0.7
         property real layers: 0.4
     }
 }

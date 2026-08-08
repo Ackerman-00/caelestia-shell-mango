@@ -16,9 +16,52 @@ StyledListView {
     required property StyledTextField search
     required property DrawerVisibilities visibilities
 
-    model: ScriptModel {
-        id: model
+    property string displayText
 
+    readonly property string requestedState: stateForText(search.text)
+    readonly property string displayState: stateForText(displayText)
+
+    function syncDisplayText(): void {
+        if (visibilities.launcher && requestedState === displayState)
+            displayText = search.text;
+    }
+
+    function stateForText(text: string): string {
+        const prefix = Config.launcher.actionPrefix;
+        if (text.startsWith(prefix)) {
+            const clipboard = `${prefix}clipboard`;
+            if (text === clipboard || text.startsWith(`${clipboard} `))
+                return "clipboard";
+
+            for (const action of ["calc", "scheme", "variant"])
+                if (text.startsWith(`${prefix}${action} `))
+                    return action;
+
+            return "actions";
+        }
+
+        return "apps";
+    }
+
+    function resultsForText(text: string): var {
+        switch (stateForText(text)) {
+        case "actions":
+            return Actions.query(text);
+        case "calc":
+            return [0];
+        case "scheme":
+            return Schemes.query(text);
+        case "variant":
+            return M3Variants.query(text);
+        case "clipboard":
+            return Clipboard.query(text);
+        default:
+            return Apps.search(text);
+        }
+    }
+
+    model: ScriptModel {
+        values: root.resultsForText(root.displayText)
         onValuesChanged: root.currentIndex = 0
     }
 
@@ -48,31 +91,22 @@ StyledListView {
         }
     }
 
-    state: {
-        const text = search.text;
-        const prefix = Config.launcher.actionPrefix;
-        if (text.startsWith(prefix)) {
-            for (const action of ["calc", "scheme", "variant"])
-                if (text.startsWith(`${prefix}${action} `))
-                    return action;
-
-            return "actions";
-        }
-
-        return "apps";
-    }
+    state: visibilities.launcher ? requestedState : displayState
 
     onStateChanged: {
         if (state === "scheme" || state === "variant")
             Schemes.reload();
+        if (state === "clipboard")
+            Clipboard.reload();
     }
+
+    Component.onCompleted: displayText = search.text
 
     states: [
         State {
             name: "apps"
 
             PropertyChanges {
-                model.values: Apps.search(search.text)
                 root.delegate: appItem
             }
         },
@@ -80,7 +114,6 @@ StyledListView {
             name: "actions"
 
             PropertyChanges {
-                model.values: Actions.query(search.text)
                 root.delegate: actionItem
             }
         },
@@ -88,7 +121,6 @@ StyledListView {
             name: "calc"
 
             PropertyChanges {
-                model.values: [0]
                 root.delegate: calcItem
             }
         },
@@ -96,7 +128,6 @@ StyledListView {
             name: "scheme"
 
             PropertyChanges {
-                model.values: Schemes.query(search.text)
                 root.delegate: schemeItem
             }
         },
@@ -104,8 +135,14 @@ StyledListView {
             name: "variant"
 
             PropertyChanges {
-                model.values: M3Variants.query(search.text)
                 root.delegate: variantItem
+            }
+        },
+        State {
+            name: "clipboard"
+
+            PropertyChanges {
+                root.delegate: clipboardItem
             }
         }
     ]
@@ -131,8 +168,16 @@ StyledListView {
                 }
             }
             PropertyAction {
-                targets: [model, root]
-                properties: "values,delegate"
+                target: root
+                property: "delegate"
+                value: null
+            }
+            ScriptAction {
+                script: root.displayText = root.search.text
+            }
+            PropertyAction {
+                target: root
+                property: "delegate"
             }
             ParallelAnimation {
                 Anim {
@@ -253,5 +298,29 @@ StyledListView {
         VariantItem {
             list: root
         }
+    }
+
+    Component {
+        id: clipboardItem
+
+        ClipboardItem {
+            list: root
+        }
+    }
+
+    Connections {
+        function onTextChanged() {
+            root.syncDisplayText();
+        }
+
+        target: root.search
+    }
+
+    Connections {
+        function onLauncherChanged() {
+            root.syncDisplayText();
+        }
+
+        target: root.visibilities
     }
 }

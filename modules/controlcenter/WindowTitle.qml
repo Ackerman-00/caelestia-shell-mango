@@ -30,12 +30,12 @@ StyledRect {
         anchors.top: parent.top
         anchors.margins: Appearance.padding.normal
 
-        implicitWidth: implicitHeight
-        implicitHeight: closeIcon.implicitHeight + Appearance.padding.small
+        width: closeIcon.implicitHeight + Appearance.padding.normal
+        height: closeIcon.implicitHeight + Appearance.padding.normal
 
         StateLayer {
             function onClicked(): void {
-                QsWindow.window.destroy();
+                root.session.root.close();
             }
 
             radius: Appearance.rounding.full

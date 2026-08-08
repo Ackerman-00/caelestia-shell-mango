@@ -93,8 +93,8 @@ Item {
         id: timer
 
         interval: Appearance.anim.durations.extraLarge
-        onRunningChanged: {
-            if (running && !root.shouldBeActive) {
+    onRunningChanged: {
+        if (running && !root.shouldBeActive) {
                 content.visible = false;
                 content.active = true;
             } else {

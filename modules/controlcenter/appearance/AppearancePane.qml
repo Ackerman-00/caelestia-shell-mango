@@ -32,6 +32,7 @@ Item {
     property real roundingScale: Config.appearance.rounding.scale ?? 1
     property real spacingScale: Config.appearance.spacing.scale ?? 1
     property bool transparencyEnabled: Config.appearance.transparency.enabled ?? false
+    property bool compositorBlur: Config.appearance.transparency.compositorBlur ?? false
     property real transparencyBase: Config.appearance.transparency.base ?? 0.85
     property real transparencyLayers: Config.appearance.transparency.layers ?? 0.4
     property real borderRounding: Config.border.rounding ?? 1
@@ -67,6 +68,7 @@ Item {
         Config.appearance.spacing.scale = root.spacingScale;
 
         Config.appearance.transparency.enabled = root.transparencyEnabled;
+        Config.appearance.transparency.compositorBlur = root.compositorBlur;
         Config.appearance.transparency.base = root.transparencyBase;
         Config.appearance.transparency.layers = root.transparencyLayers;
 
@@ -109,12 +111,29 @@ Item {
                 anchors.fill: parent
                 spacing: 0
 
-                StyledText {
+                RowLayout {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.bottomMargin: Appearance.spacing.normal
-                    text: qsTr("Wallpaper")
-                    font.pointSize: Appearance.font.size.extraLarge
-                    font.weight: 600
+                    spacing: Appearance.spacing.normal
+
+                    StyledText {
+                        text: qsTr("Wallpaper")
+                        font.pointSize: Appearance.font.size.extraLarge
+                        font.weight: 600
+                    }
+
+                    IconButton {
+                        id: randomWallpaperBtn
+
+                        icon: "shuffle"
+                        type: IconButton.Tonal
+                        onClicked: Wallpapers.setRandom()
+                    }
+
+                    Tooltip {
+                        target: randomWallpaperBtn
+                        text: qsTr("Random wallpaper")
+                    }
                 }
 
                 Loader {

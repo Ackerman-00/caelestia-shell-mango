@@ -45,10 +45,15 @@ Item {
 
     function close(): void {
         hasCurrent = false;
+        currentName = "";
         animCurve = Appearance.anim.curves.emphasizedAccel;
         animLength = Appearance.anim.durations.normal;
         detachedMode = "";
         animCurve = Appearance.anim.curves.emphasized;
+    }
+
+    function clearState(): void {
+        popoutState.clearState();
     }
 
     visible: width > 0 && height > 0

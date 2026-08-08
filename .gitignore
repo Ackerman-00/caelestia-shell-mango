@@ -24,3 +24,6 @@ test-mangowc-ipc.sh
 *~
 
 logs
+
+# Agent context (personal, not pushed)
+AGENTS.md

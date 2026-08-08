@@ -37,7 +37,7 @@ StyledRect {
                 anchors.fill: parent
                 anchors.margins: Appearance.padding.normal
 
-                text: `${root.dialog.filterLabel} (${root.dialog.filters.map(f => `*.${f}`).join(", ")})`
+                text: root.dialog.selectFolder ? qsTr("Folder") : `${root.dialog.filterLabel} (${root.dialog.filters.map(f => `*.${f}`).join(", ")})`
             }
         }
 
@@ -62,7 +62,7 @@ StyledRect {
                 anchors.centerIn: parent
                 anchors.margins: Appearance.padding.normal
 
-                text: qsTr("Select")
+                text: root.dialog.selectFolder ? qsTr("Select folder") : qsTr("Select")
                 color: root.dialog.selectionValid ? Colours.palette.m3onSurface : Colours.palette.m3outline
             }
         }

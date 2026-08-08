@@ -18,10 +18,16 @@ CustomMouseArea {
     required property real borderThickness
     required property bool fullscreen
 
+    signal outsideClicked
+
     property point dragStart
     property bool dashboardShortcutActive
     property bool osdShortcutActive
     property bool utilitiesShortcutActive
+
+    function clearInteraction(): void {
+        outsideClicked();
+    }
 
     function withinPanelHeight(panel: Item, x: real, y: real): bool {
         const panelY = root.borderThickness + panel.y;
@@ -76,8 +82,10 @@ CustomMouseArea {
                                             (visibilities.osd && inRightPanel(panels.osd, x, y));
 
         // If we are not interacting with any visible shell surface, let the click pass to the underlying window
-        if (!interactingWithBar && !interactingWithVisiblePanel)
+        if (!interactingWithBar && !interactingWithVisiblePanel) {
+            outsideClicked();
             event.accepted = false;
+        }
     }
     onContainsMouseChanged: {
         if (!containsMouse) {

@@ -54,6 +54,13 @@ Singleton {
                 floating: true
             }
 
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_Escape) {
+                    event.accepted = true;
+                    win.destroy();
+                }
+            }
+
             Behavior on color {
                 CAnim {}
             }

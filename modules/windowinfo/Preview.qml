@@ -5,6 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.components
+import qs.components.images
 import qs.services
 import qs.config
 
@@ -16,7 +17,6 @@ Item {
 
     Layout.preferredWidth: 0
     Layout.fillHeight: true
-    visible: false  // Hide preview - requires xdg-desktop-portal-wlr setup
 
     StyledClippingRect {
         id: preview
@@ -64,16 +64,20 @@ Item {
             }
         }
 
-        ScreencopyView {
+        MangoWindow {
             id: view
 
             anchors.centerIn: parent
+            captureId: root.client?.lastIpcObject.toplevelId ?? ""
+            maxPixel: 800
 
-            captureSource: root.client?.wayland ?? null // qmllint disable unresolved-type
-            live: true
+            readonly property real aspectRatio: {
+                const s = root.client?.lastIpcObject.size ?? null;
+                return s && s[1] > 0 ? s[0] / s[1] : 1.0;
+            }
 
-            constraintSize.width: root.client ? parent.height * Math.min(root.screen.width / root.screen.height, root.client?.lastIpcObject.size[0] / root.client?.lastIpcObject.size[1]) : parent.height
-            constraintSize.height: parent.height
+            implicitWidth: parent.height * Math.min(root.screen.width / root.screen.height, aspectRatio)
+            implicitHeight: parent.height
         }
     }
 

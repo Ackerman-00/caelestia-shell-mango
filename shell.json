@@ -28,8 +28,9 @@
       }
     },
     "transparency": {
-      "enabled": false,
-      "base": 0.85,
+      "enabled": true,
+      "compositorBlur": true,
+      "base": 0.7,
       "layers": 0.4
     }
   },
@@ -101,12 +102,12 @@
     "enabled": true,
     "wallpaperEnabled": true,
     "desktopClock": {
-      "enabled": false,
+      "enabled": true,
       "scale": 1,
       "position": "bottom-right",
       "invertColors": false,
       "background": {
-        "enabled": false,
+        "enabled": true,
         "opacity": 0.7,
         "blur": true
       },
@@ -117,7 +118,7 @@
       }
     },
     "visualiser": {
-      "enabled": false,
+      "enabled": true,
       "autoHide": true,
       "blur": false,
       "rounding": 1,
@@ -147,9 +148,9 @@
       "maxWindowIcons": 0,
       "activeTrail": false,
       "perMonitorWorkspaces": true,
-      "label": "  ",
-      "occupiedLabel": "󰮯",
-      "activeLabel": "󰮯",
+      "label": "\uf444  ",
+      "occupiedLabel": "\udb82\udfaf",
+      "activeLabel": "\udb82\udfaf",
       "capitalisation": "preserve",
       "specialWorkspaceIcons": [],
       "windowIcons": [
@@ -280,6 +281,17 @@
       {
         "command": [
           "autocomplete",
+          "clipboard"
+        ],
+        "dangerous": false,
+        "description": "Paste from clipboard history",
+        "enabled": true,
+        "icon": "content_paste",
+        "name": "Clipboard"
+      },
+      {
+        "command": [
+          "autocomplete",
           "scheme"
         ],
         "dangerous": false,
@@ -317,7 +329,7 @@
         ],
         "dangerous": false,
         "description": "Change shell transparency",
-        "enabled": false,
+        "enabled": true,
         "icon": "opacity",
         "name": "Transparency"
       },
@@ -497,7 +509,7 @@
       "nowPlaying": false
     },
     "vpn": {
-      "enabled": false,
+      "enabled": true,
       "provider": []
     },
     "quickToggles": [
@@ -526,7 +538,7 @@
         "id": "dnd"
       },
       {
-        "enabled": false,
+        "enabled": true,
         "id": "vpn"
       }
     ]

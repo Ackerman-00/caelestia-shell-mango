@@ -90,6 +90,7 @@ Singleton {
             },
             transparency: {
                 enabled: appearance.transparency.enabled,
+                compositorBlur: appearance.transparency.compositorBlur,
                 base: appearance.transparency.base,
                 layers: appearance.transparency.layers
             }

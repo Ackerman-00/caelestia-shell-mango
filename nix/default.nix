@@ -11,6 +11,7 @@
   networkmanager,
   lm_sensors,
   swappy,
+  grim,
   wl-clipboard,
   libqalculate,
   bash,
@@ -44,6 +45,7 @@
       networkmanager
       lm_sensors
       swappy
+      grim
       wl-clipboard
       libqalculate
       bash
@@ -131,6 +133,7 @@ in
     postInstall = ''
       makeWrapper ${quickshell}/bin/qs $out/bin/caelestia-shell \
       	--prefix PATH : "${lib.makeBinPath runtimeDeps}" \
+      	--prefix XDG_DATA_DIRS : "/usr/local/share:/usr/share" \
       	--set FONTCONFIG_FILE "${fontconfig}" \
       	--set CAELESTIA_LIB_DIR ${extras}/lib \
         --set CAELESTIA_XKB_RULES_PATH ${xkeyboard-config}/share/xkeyboard-config-2/rules/base.lst \

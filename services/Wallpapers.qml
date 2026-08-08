@@ -27,6 +27,10 @@ Searcher {
         Quickshell.execDetached(["caelestia", "wallpaper", "-f", path, ...smartArg]);
     }
 
+    function setRandom(): void {
+        Quickshell.execDetached(["caelestia", "wallpaper", "-r", Paths.wallsdir, ...smartArg]);
+    }
+
     function preview(path: string): void {
         previewPath = path;
         showPreview = true;
@@ -55,6 +59,10 @@ Searcher {
 
         function set(path: string): void {
             root.setWallpaper(path);
+        }
+
+        function random(): void {
+            root.setRandom();
         }
 
         function list(): string {

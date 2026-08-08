@@ -47,8 +47,11 @@ Install the **development** packages for each dependency via your distro's packa
 | `networkmanager` | network info |
 | `lm-sensors` | hardware monitoring |
 | `libcava` | audio visualiser |
+| `grim` | active-window preview (`grim -T <foreign_toplevel_id>`) |
 | `swappy` | screenshot editor |
 | `wl-clipboard` | clipboard access (`wl-copy`, `wl-paste`) |
+| `cliphist` | clipboard history (powered by `wl-clipboard`) |
+| `caelestia-cli-mango` | colour scheme & wallpaper management (`caelestia scheme set`, `caelestia wallpaper`). MangoWM fork of `caelestia-dots/cli` (no Hyprland coupling); install via `pip install --user -e <repo>` or a future COPR package. Generates colors from wallpapers via `materialyoucolor` (not `matugen`). |
 | `libnotify` | desktop notifications (`notify-send`) |
 | `procps` | process monitoring (`pidof`) |
 | `util-linux` | disk info (`lsblk`) |
@@ -57,6 +60,7 @@ Install the **development** packages for each dependency via your distro's packa
 | `app2unit` | application launcher (converts desktop entries to systemd units) |
 | `systemd` | session management (`loginctl`, `systemctl`) |
 | `polkit` | privilege escalation (`pkexec`) |
+| `iproute2` | VPN/wireguard status (`ip link show`) |
 | `bash` | used throughout for shell commands |
 
 > **Note:** Keyboard layout switching uses `setxkbmap` (tool-agnostic). No Hyprland dependencies remain.
@@ -68,9 +72,11 @@ Install the **development** packages for each dependency via your distro's packa
 | `libqalculate` | in-app calculator |
 | `aubio` | audio beat detection |
 | `ddcutil` | external monitor control |
-| `caelestia-cli` | CLI helper |
 | `gpu-screen-recorder` | screen recording (monitored via `pidof`) |
 | `brightnessctl` | backlight control (needed if not using `ddcutil`) |
+| `asdbctl` | ASUS external display backlight control (only if ASUS) |
+| `nvidia-smi` / `glxinfo` / `lspci` | GPU name detection (fallback chain) |
+| `tailscale` / `netbird` / `warp-cli` | VPN provider status in the network pane (only if used) |
 | `fish` | calculator integration shell |
 
 ### System-wide Install
@@ -152,13 +158,16 @@ Add to `~/.config/mango/mango_bind.conf`:
 ```conf
 # ─── CAELESTIA SHELL IPC ───────────────────────────────────
 bind=SUPER,a,spawn_shell,caelestia-shell ipc call drawers toggle launcher
-bind=SUPER,v,spawn_shell,caelestia-shell ipc call drawers toggle sidebar
+bind=SUPER,v,spawn_shell,caelestia-shell ipc call clipboard open
 bind=SUPER,comma,spawn_shell,caelestia-shell ipc call controlCenter open
 bind=SUPER,w,spawn_shell,caelestia-shell ipc call wallpaper openMenu
-bind=SUPER,p,spawn_shell,caelestia-shell ipc call drawers toggle dashboard
-bind=SUPER,l,spawn_shell,caelestia-shell ipc call lock lock
+bind=CTRL+ALT,w,spawn_shell,caelestia-shell ipc call wallpaper random
+bind=SUPER+p,spawn_shell,caelestia-shell ipc call drawers toggle dashboard
+bind=SUPER+l,spawn_shell,caelestia-shell ipc call lock lock
 bind=SUPER+SHIFT,Print,spawn_shell,caelestia-shell ipc call picker open
-bind=CTRL+ALT,w,spawn_shell,find ~/Pictures/wallpapers -type f \( -name "*.jpg" -o -name "*.png" -o -name "*.jpeg" \) | shuf -n1 | xargs -r caelestia-shell ipc call wallpaper set
+bind=CTRL+ALT,U,spawn_shell,caelestia-shell ipc call record start
+bind=CTRL+ALT,P,spawn_shell,caelestia-shell ipc call record togglePause
+bind=CTRL+ALT,S,spawn_shell,caelestia-shell ipc call record stop
 bind=CTRL+ALT,Delete,spawn_shell,caelestia-shell ipc call drawers toggle session
 bind=NONE,XF86AudioRaiseVolume,spawn_shell,caelestia-shell ipc call audio set 5%+
 bind=NONE,XF86AudioLowerVolume,spawn_shell,caelestia-shell ipc call audio set 5%-
@@ -177,6 +186,13 @@ All IPC commands go through `caelestia-shell` (in PATH after system-wide install
 caelestia-shell ipc call <target> <function> [args...]
 ```
 
+When running the dev shell from the repo (`quickshell -p /path/to/repo`), target the
+running instance's shell dir instead:
+
+```sh
+quickshell ipc -p /path/to/repo call <target> <function> [args...]
+```
+
 ### drawers
 
 Toggle launcher, dashboard, sidebar, utilities, session, and OSD panels.
@@ -187,6 +203,14 @@ Toggle launcher, dashboard, sidebar, utilities, session, and OSD panels.
 | `list` | `list(): string` | List available drawer names |
 | `isOpen` | `isOpen(drawer: string): string` | Check if a drawer is open (`"1"` / `"0"` / `"unknown"`) |
 
+### clipboard
+
+Open the launcher directly into clipboard history mode.
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `open` | `open(): void` | Open launcher with clipboard history |
+
 ### controlCenter
 
 Open the settings/control center window.
@@ -194,15 +218,18 @@ Open the settings/control center window.
 | Function | Signature | Description |
 |----------|-----------|-------------|
 | `open` | `open(): void` | Open control center |
+| `openPane` | `openPane(pane: string): void` | Open control center on a specific pane (`appearance`, `audio`, `bluetooth`, `dashboard`, `launcher`, `network`, `notifications`, `session`, `taskbar`) |
 
 ### wallpaper
 
-Manage wallpapers.
+Manage wallpapers. All functions use the configured `paths.wallpaperDir`
+(see [Paths](#paths)) — no hardcoded directory.
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
 | `get` | `get(): string` | Get current wallpaper path |
-| `set` | `set(path: string)` | Set wallpaper by path |
+| `set` | `set(path: string): void` | Set wallpaper by path |
+| `random` | `random(): void` | Set a random wallpaper from the configured wallpaper directory (runs `caelestia wallpaper -r <wallsdir>`) |
 | `list` | `list(): string` | List all available wallpaper paths |
 | `openMenu` | `openMenu(): void` | Open launcher with wallpaper picker |
 
@@ -289,7 +316,10 @@ Send toast notifications.
 
 ### gameMode
 
-Toggle game mode (disables animations, blur, shadows, gaps).
+Toggle game mode (disables animations, blur, shadows, gaps, border rounding; forces
+`allow_tearing`). On Mango this writes `~/.config/mango/caelestia_gamemode.conf` and toggles a
+`source=` line in `mango_core.conf` + `mmsg dispatch reload_config` — removing the source line
+restores the user's original values, and the state survives shell restarts.
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
@@ -309,6 +339,19 @@ Inhibit idle/screensaver.
 | `disable` | `disable(): void` | Disable idle inhibit |
 | `isEnabled` | `isEnabled(): bool` | Check inhibit status |
 
+### record
+
+Screen recording (drives `gpu-screen-recorder` via the `caelestia` CLI).
+
+| Function | Signature | Description |
+|----------|-----------|-------------|
+| `start` | `start(): void` | Start recording on the focused monitor |
+| `startArgs` | `startArgs(extraArgs: string): void` | Start recording with whitespace-separated extra args (e.g. `"-r"` for region via slurp, `"-s"` for sound) |
+| `stop` | `stop(): void` | Stop recording |
+| `togglePause` | `togglePause(): void` | Pause/resume recording |
+| `isRunning` | `isRunning(): string` | Check if recording (`"1"` / `"0"`) |
+| `isPaused` | `isPaused(): string` | Check if paused (`"1"` / `"0"`) |
+
 ### mango
 
 MangoWC compositor bridge.
@@ -327,7 +370,7 @@ Edit `~/.config/caelestia/shell.json` (must be created manually).
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `paths.wallpaperDir` | `~/Pictures/Wallpapers` | Wallpaper directory |
+| `paths.wallpaperDir` | `~/Pictures/Wallpapers` | Wallpaper directory (source of truth for wallpaper `list`/`random`/`set`; can be set from Settings → Appearance → Wallpaper folder) |
 | `paths.lyricsDir` | `~/Music/lyrics/` | MPRIS lyrics directory |
 | `paths.sessionGif` | `root:/assets/kurukuru.gif` | Session menu animation |
 | `paths.mediaGif` | `root:/assets/bongocat.gif` | Media player animation |

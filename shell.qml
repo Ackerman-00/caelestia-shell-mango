@@ -1,6 +1,10 @@
 //@ pragma Env QS_NO_RELOAD_POPUP=1
 //@ pragma Env QSG_RENDER_LOOP=threaded
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
+//@ pragma DefaultEnv XDG_DATA_DIRS=/usr/local/share:/usr/share
+//@ if isEnvSet("XDG_DATA_DIRS") && !env("XDG_DATA_DIRS").split(":").includes("/usr/share")
+//@ pragma Env XDG_DATA_DIRS=/usr/local/share:/usr/share
+//@ endif
 
 import "modules"
 import "modules/drawers"
@@ -18,6 +22,10 @@ ShellRoot {
     readonly property bool toolingMode: Quickshell.env("CAELESTIA_QML_TOOLING") === "1"
 
     Component.onCompleted: {
+        // Purge stale active-window preview captures from previous sessions.
+        // /tmp is cleared by the OS on reboot; this also handles live restarts.
+        Quickshell.execDetached(["sh", "-c", "rm -f /tmp/caelestia-active-*"]);
+
         if (!Quickshell.env("XDG_CURRENT_DESKTOP"))
             CUtils.setEnv("XDG_CURRENT_DESKTOP", "mango");
         if (!Quickshell.env("XDG_SESSION_DESKTOP"))
@@ -26,6 +34,11 @@ ShellRoot {
             CUtils.setEnv("SDL_VIDEODRIVER", "wayland");
         if (!Quickshell.env("XDG_DESKTOP_PORTAL"))
             CUtils.setEnv("XDG_DESKTOP_PORTAL", "mango");
+
+        if (Quickshell.env("CAELESTIA_CLIPBOARD_DAEMON") !== "0") {
+            Quickshell.execDetached(["sh", "-c", `pgrep -f "wl-paste --type text --watch cliphist [s]tore" > /dev/null || (wl-paste --type text --watch cliphist store &)`]);
+            Quickshell.execDetached(["sh", "-c", `pgrep -f "wl-paste --type image --watch cliphist [s]tore" > /dev/null || (wl-paste --type image --watch cliphist store &)`]);
+        }
     }
 
     Loader {

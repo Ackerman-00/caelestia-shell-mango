@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell.Wayland
 import Quickshell.Widgets
 import qs.components
+import qs.components.images
 import qs.services
 import qs.config
 import qs.utils
@@ -89,15 +90,21 @@ Item {
             color: "transparent"
             radius: Appearance.rounding.small
 
-            ScreencopyView {
+            implicitWidth: Math.min(root.size, root.size * root.aspect)
+            implicitHeight: Math.min(root.size, root.size / Math.max(root.aspect, 0.0001))
+
+            MangoWindow {
                 id: preview
 
-                captureSource: Hypr.activeToplevel?.wayland ?? null // qmllint disable unresolved-type
-                live: visible
-
-                constraintSize.width: Config.bar.sizes.windowPreviewSize
-                constraintSize.height: Config.bar.sizes.windowPreviewSize
+                anchors.fill: parent
+                captureId: Hypr.activeToplevel?.lastIpcObject.toplevelId ?? ""
             }
         }
+    }
+
+    readonly property real size: Config.bar.sizes.windowPreviewSize
+    readonly property real aspect: {
+        const s = Hypr.activeToplevel?.lastIpcObject.size ?? null;
+        return s && s[1] > 0 ? s[0] / s[1] : 1.0;
     }
 }

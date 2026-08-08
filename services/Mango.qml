@@ -20,7 +20,9 @@ Singleton {
         values: parsedTags
     }) // Workspace list with .values accessor
     
-    readonly property var monitors: outputsList // Monitor list - still stubbed
+    readonly property var monitors: ({
+        values: outputsList
+    }) // Monitor list with .values accessor
 
     // Active window with full compatibility layer
     readonly property var activeToplevel: focusedClient
@@ -47,7 +49,8 @@ Singleton {
                 address: "0x0",
                 pid: -1,
                 xwayland: false,
-                pinned: false
+                pinned: false,
+                toplevelId: root.focusedClientId
             };
             // Set 'class' property (reserved keyword)
             obj["class"] = ToplevelManager.activeToplevel?.appId ?? "";
@@ -90,6 +93,7 @@ Singleton {
     // Client info
     property string focusedClientTitle: ""
     property string focusedClientAppId: ""
+    property string focusedClientId: "" // foreign_toplevel_id for grim -T capture
     property int focusedClientX: 0
     property int focusedClientY: 0
     property int focusedClientWidth: 0
@@ -145,17 +149,32 @@ Singleton {
         } else if (command === "togglefullscreen" || command === "fullscreen") {
             Quickshell.execDetached(["mmsg", "dispatch", "togglefullscreen"]);
         } else if (command === "pin") {
-            Quickshell.execDetached(["mmsg", "dispatch", "togglepin"]);
+            Quickshell.execDetached(["mmsg", "dispatch", "toggleglobal"]);
         } else if (command === "workspace" || command === "tag") {
-            const tagNum = parseInt(args[0]);
-            if (!isNaN(tagNum)) {
-                Quickshell.execDetached(["mmsg", "dispatch", "view," + tagNum.toString()]);
-                activeTagNumber = tagNum;
+            const arg = args[0] ?? "";
+            const relMatch = /^r([+-])(\d+)$/.exec(arg);
+            if (relMatch) {
+                const dir = relMatch[1] === "+" ? "viewtoright" : "viewtoleft";
+                Quickshell.execDetached(["mmsg", "dispatch", dir]);
+                // Update UI immediately so the indicator follows the wheel
+                // instead of waiting for the all-tags poll (200ms).
+                const step = parseInt(relMatch[2]) || 1;
+                const tagCount = Math.max(1, parsedTags.length);
+                if (relMatch[1] === "+")
+                    activeTagNumber = Math.min(activeTagNumber + step, tagCount);
+                else
+                    activeTagNumber = Math.max(1, activeTagNumber - step);
+            } else {
+                const tagNum = parseInt(arg);
+                if (!isNaN(tagNum)) {
+                    Quickshell.execDetached(["mmsg", "dispatch", "view," + tagNum.toString()]);
+                    activeTagNumber = tagNum;
+                }
             }
         } else if (command === "movetoworkspace") {
             const tagNum = parseInt(args[0].replace(/^[^0-9]*/, ""));
             if (!isNaN(tagNum)) {
-                Quickshell.execDetached(["mmsg", "dispatch", "sendtotag," + tagNum.toString()]);
+                Quickshell.execDetached(["mmsg", "dispatch", "tag," + tagNum.toString()]);
             }
         } else if (command === "togglespecialworkspace") {
             console.warn("MangoWC: Special workspaces not supported");
@@ -166,7 +185,7 @@ Singleton {
         } else if (command === "focusdir") {
             Quickshell.execDetached(["mmsg", "dispatch", "focusdir," + args[0]]);
         } else if (command === "cyclelayout") {
-            Quickshell.execDetached(["mmsg", "dispatch", "cyclelayout"]);
+            Quickshell.execDetached(["mmsg", "dispatch", "switch_layout"]);
         } else {
             const fullCmd = [command, ...args].join(",");
             console.log("MangoWC: Dispatching:", fullCmd);
@@ -190,6 +209,33 @@ Singleton {
     function reloadDynamicConfs(): void {
         // MangoWC doesn't have dynamic config reloading via IPC
         console.log("MangoWC: Dynamic config reload not supported");
+    }
+
+    // Toggle compositor blur by editing mango_core.conf and hot-reloading.
+    // Mango blur is GLOBAL: `blur` frosts windows AND is the master toggle that
+    // `blur_layer` (layer surfaces = bars/drawers) piggybacks on. So enabling
+    // compositor blur here turns on BOTH (blur_layer does nothing without blur).
+    // Disabling sets both off, leaving crisp apps + QML-transparent panels.
+    function setCompositorBlur(enabled: bool): void {
+        // Mango blur (mangowm.github.io/docs/visuals/effects):
+        //   blur=1            master toggle (frosts windows)
+        //   blur_layer=1      layer surfaces (bars/drawers/panels) — needs blur=1
+        //   blur_optimized=0  standard setup — composite against real content
+        //                     (blur_optimized=1 caches wallpaper as blur bg, cheaper)
+        // Disabling sets all off, leaving crisp apps + QML-transparent panels.
+        const value = enabled ? "1" : "0";
+        const optimized = enabled ? "0" : "1";
+        const conf = `${Quickshell.env("HOME")}/.config/mango/mango_core.conf`;
+        const script = `f="${conf}"; ` +
+            `for kv in "blur=${value}" "blur_layer=${value}" "blur_optimized=${optimized}"; do ` +
+            `k="\${kv%%=*}"; v="\${kv#*=}"; ` +
+            `if grep -q "^$k=" "$f"; then ` +
+            `sed -i -E "s/^$k=[0-9]+/$k=$v/" "$f"; ` +
+            `else printf "$k=%s\\n" "$v" >> "$f"; fi; ` +
+            `done; ` +
+            `mmsg dispatch reload_config`;
+        Quickshell.execDetached(["sh", "-c", script]);
+        console.log(`MangoWC: Compositor blur ${enabled ? "enabled" : "disabled"}`);
     }
 
     Component.onCompleted: {
@@ -297,6 +343,7 @@ Singleton {
             const data = JSON.parse(output);
             root.focusedClientTitle = data.title ?? "";
             root.focusedClientAppId = data.appid ?? "";
+            root.focusedClientId = data.foreign_toplevel_id ?? "";
             root.focusedClientX = data.x ?? 0;
             root.focusedClientY = data.y ?? 0;
             root.focusedClientWidth = data.width ?? 0;
@@ -307,6 +354,7 @@ Singleton {
             // No focused client — reset to defaults
             root.focusedClientTitle = "";
             root.focusedClientAppId = "";
+            root.focusedClientId = "";
             root.focusedClientX = 0;
             root.focusedClientY = 0;
             root.focusedClientWidth = 0;

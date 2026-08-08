@@ -23,6 +23,16 @@ CollapsibleSection {
         checked: rootPane.transparencyEnabled
         onToggled: checked => {
             rootPane.transparencyEnabled = checked;
+            rootPane.compositorBlur = checked;
+            rootPane.saveConfig();
+        }
+    }
+
+    SwitchRow {
+        label: qsTr("Compositor blur (Mango)")
+        checked: rootPane.compositorBlur
+        onToggled: checked => {
+            rootPane.compositorBlur = checked;
             rootPane.saveConfig();
         }
     }

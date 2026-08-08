@@ -25,6 +25,14 @@ JsonObject {
             dangerous: false
         },
         {
+            name: "Clipboard",
+            icon: "content_paste",
+            description: "Paste from clipboard history",
+            command: ["autocomplete", "clipboard"],
+            enabled: true,
+            dangerous: false
+        },
+        {
             name: "Scheme",
             icon: "palette",
             description: "Change the current colour scheme",
@@ -52,8 +60,8 @@ JsonObject {
             name: "Transparency",
             icon: "opacity",
             description: "Change shell transparency",
-            command: ["autocomplete", "transparency"],
-            enabled: false,
+            command: ["caelestia", "shell", "controlCenter", "openPane", "appearance"],
+            enabled: true,
             dangerous: false
         },
         {
@@ -136,6 +144,7 @@ JsonObject {
         property bool schemes: false
         property bool variants: false
         property bool wallpapers: false
+        property bool clipboard: false
     }
 
     component Sizes: JsonObject {

@@ -7,8 +7,10 @@ import QtQuick.Layouts
 import qs.components
 import qs.components.containers
 import qs.components.controls
+import qs.components.filedialog
 import qs.services
 import qs.config
+import qs.utils
 
 CollapsibleSection {
     id: root
@@ -33,6 +35,63 @@ CollapsibleSection {
         onToggled: checked => {
             rootPane.wallpaperEnabled = checked;
             rootPane.saveConfig();
+        }
+    }
+
+    SectionContainer {
+        contentSpacing: Appearance.spacing.small
+
+        RowLayout {
+            Layout.fillWidth: true
+
+            StyledText {
+                Layout.fillWidth: true
+
+                text: qsTr("Wallpaper folder")
+                font.pointSize: Appearance.font.size.larger
+                font.weight: 500
+            }
+
+            IconButton {
+                icon: "folder_open"
+                type: IconButton.Tonal
+                onClicked: folderDialog.open()
+            }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+
+            text: Config.paths.wallpaperDir
+            color: Colours.palette.m3outline
+            elide: Text.ElideMiddle
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+
+            text: qsTr("Folder where wallpapers are searched for by the launcher, random wallpaper and the wallpaper grid.")
+            color: Colours.palette.m3outline
+            font.pointSize: Appearance.font.size.small
+            wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+        }
+
+        FileDialog {
+            id: folderDialog
+
+            title: qsTr("Select wallpaper folder")
+            filterLabel: qsTr("Folder")
+            selectFolder: true
+            cwd: {
+                const dir = Config.paths.wallpaperDir;
+                if (dir.startsWith(Paths.home))
+                    return ["Home", ...dir.slice(Paths.home.length + 1).split("/").filter(p => p.length > 0)];
+                return dir.split("/").filter(p => p.length > 0);
+            }
+            onAccepted: path => {
+                Config.paths.wallpaperDir = path;
+                rootPane.saveConfig();
+            }
         }
     }
 

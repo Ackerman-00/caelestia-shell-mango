@@ -39,13 +39,25 @@ Searcher {
                 return;
 
             if (command[0] === "autocomplete" && command.length > 1) {
-                list.search.text = `${Config.launcher.actionPrefix}${command[1]} `;
+                list.search.text = command[1] === "clipboard"
+                    ? `${Config.launcher.actionPrefix}${command[1]}`
+                    : `${Config.launcher.actionPrefix}${command[1]} `;
             } else if (command[0] === "setMode" && command.length > 1) {
                 list.visibilities.launcher = false;
                 Colours.setMode(command[1]);
             } else {
                 list.visibilities.launcher = false;
-                Quickshell.execDetached(command);
+                let cmd = [...command];
+                if (cmd[0] === "caelestia" && cmd[1] === "shell") {
+                    // Mango: the shell is launched with -p <path>, not -c caelestia,
+                    // so IPC must target the running instance's shell dir directly.
+                    cmd = ["quickshell", "ipc", "-p", Quickshell.shellDir, "call", ...cmd.slice(2)];
+                } else if (cmd[0] === "caelestia" && cmd[1] === "wallpaper" && cmd[2] === "-r" && cmd.length === 3) {
+                    // Random wallpaper needs the configured wallsdir; the CLI default
+                    // (~/Pictures/Wallpapers) may not match Config.paths.wallpaperDir.
+                    cmd.push(Paths.wallsdir);
+                }
+                Quickshell.execDetached(cmd);
             }
         }
     }
