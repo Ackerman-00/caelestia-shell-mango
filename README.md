@@ -29,6 +29,12 @@ Also install **[caelestia-cli-mango](https://github.com/Ackerman-00/caelestia-cl
 sudo dnf install caelestia-cli-mango
 ```
 
+> **Tip:** both packages install with a single command:
+>
+> ```sh
+> sudo dnf install caelestia-shell-mango caelestia-cli-mango
+> ```
+
 ### Build Dependencies
 
 | Dependency | Needed for |
