@@ -20,20 +20,10 @@ All Fedora builds for caelestia-shell and its dependencies are available in the 
 
 ```sh
 sudo dnf copr enable ackerman/nexus
-sudo dnf install caelestia-shell-mango
+sudo dnf install caelestia-shell-mango caelestia-cli-mango
 ```
 
-Also install **[caelestia-cli-mango](https://github.com/Ackerman-00/caelestia-cli-mango)** — the MangoWM fork of the `caelestia` CLI that drives colour schemes and wallpapers (required for `caelestia scheme set`, `caelestia wallpaper`):
-
-```sh
-sudo dnf install caelestia-cli-mango
-```
-
-> **Tip:** both packages install with a single command:
->
-> ```sh
-> sudo dnf install caelestia-shell-mango caelestia-cli-mango
-> ```
+**[caelestia-cli-mango](https://github.com/Ackerman-00/caelestia-cli-mango)** — the MangoWM fork of the `caelestia` CLI that drives colour schemes and wallpapers (required for `caelestia scheme set`, `caelestia wallpaper`).
 
 ### Build Dependencies
 
