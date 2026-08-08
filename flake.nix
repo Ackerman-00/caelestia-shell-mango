@@ -10,7 +10,7 @@
     };
 
     caelestia-cli = {
-      url = "github:caelestia-dots/cli";
+      url = "github:Ackerman-00/caelestia-cli-mango";
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.caelestia-shell.follows = "";
     };
