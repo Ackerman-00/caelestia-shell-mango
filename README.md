@@ -1,4 +1,4 @@
-<h1 align="center">caelestia-shell <sub>MangoWC Port</sub></h1>
+<h1 align="center">caelestia-shell <sub>MangoWM Port</sub></h1>
 
 <div align="center">
 
