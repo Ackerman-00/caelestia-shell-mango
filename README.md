@@ -51,7 +51,7 @@ Install the **development** packages for each dependency via your distro's packa
 | `swappy` | screenshot editor |
 | `wl-clipboard` | clipboard access (`wl-copy`, `wl-paste`) |
 | `cliphist` | clipboard history (powered by `wl-clipboard`) |
-| `caelestia-cli-mango` | colour scheme & wallpaper management (`caelestia scheme set`, `caelestia wallpaper`). MangoWM fork of `caelestia-dots/cli` (no Hyprland coupling); install via `pip install --user -e <repo>` or a future COPR package. Generates colors from wallpapers via `materialyoucolor` (not `matugen`). |
+| [`caelestia-cli-mango`](https://github.com/Ackerman-00/caelestia-cli-mango) | colour scheme & wallpaper management (`caelestia scheme set`, `caelestia wallpaper`). MangoWM fork of `caelestia-dots/cli` (no Hyprland coupling); install via `pip install --user -e <repo>` or a future COPR package. Generates colors from wallpapers via `materialyoucolor` (not `matugen`). |
 | `libnotify` | desktop notifications (`notify-send`) |
 | `procps` | process monitoring (`pidof`) |
 | `util-linux` | disk info (`lsblk`) |
