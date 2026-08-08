@@ -27,7 +27,7 @@ jobs:
             - name: Create release
               uses: softprops/action-gh-release@v2
               with:
-                  name: "Caelestia Shell v${{ steps.version.outputs.version }}"
+                  name: "Caelestia Shell MangoWM v${{ steps.version.outputs.version }}"
                   files: |
                       caelestia-shell-${{ steps.version.outputs.version }}-source.zip
                       caelestia-shell-${{ steps.version.outputs.version }}-source.zip.sha256
