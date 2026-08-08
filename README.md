@@ -18,7 +18,16 @@ https://github.com/user-attachments/assets/0840f496-575c-4ca6-83a8-87bb01a85c5f
 
 All Fedora builds for caelestia-shell and its dependencies are available in the Nexus COPR repository:
 
-📦 **[nexus COPR repository](https://copr.fedorainfracloud.org/coprs/ackerman/nexus/)**
+```sh
+sudo dnf copr enable ackerman/nexus
+sudo dnf install caelestia-shell-mango
+```
+
+Also install **[caelestia-cli-mango](https://github.com/Ackerman-00/caelestia-cli-mango)** — the MangoWM fork of the `caelestia` CLI that drives colour schemes and wallpapers (required for `caelestia scheme set`, `caelestia wallpaper`):
+
+```sh
+sudo dnf install caelestia-cli-mango
+```
 
 ### Build Dependencies
 
