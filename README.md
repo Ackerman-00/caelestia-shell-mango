@@ -24,16 +24,21 @@ All Fedora builds for caelestia-shell and its dependencies are available in the 
 
 | Dependency | Needed for |
 |------------|-----------|
-| `cmake` (≥ 3.19), `ninja` | build system |
-| `gcc` or `clang` | C++20 compiler |
-| Qt6 (base + declarative) | Qt6 core, gui, qml, quick, network, dbus, sql, concurrent |
-| Qt6 shadertools | shader compilation |
-| `libqalculate` (dev) | in-app calculator |
-| `libpipewire` (dev) | audio control |
-| `libaubio` (dev) | audio beat detection |
-| `libcava` or `cava` (dev) | audio visualiser |
-| `material-symbols` font | icon set |
-| `caskaydia-cove-nerd` font | monospace font |
+| `cmake` (≥ 3.19), `ninja-build` | build system |
+| `gcc-c++` or `clang` | C++20 compiler |
+| `pkgconf-pkg-config` | dependency detection |
+| Qt6 `qtbase-devel` + `qtdeclarative-devel` | Qt6 core, gui, qml, quick, network, dbus, sql, concurrent |
+| `qt6-qtwayland-devel` | Wayland integration |
+| `qt6-qtshadertools-devel` | shader compilation |
+| `libglvnd-devel` | OpenGL loader |
+| `wayland-devel` | Wayland protocols |
+| `libqalculate-devel` | in-app calculator |
+| `pipewire-devel` | audio control |
+| `aubio-devel` | audio beat detection |
+| `libcava-devel` | audio visualiser |
+| `fftw-devel` | FFT (cava dependency) |
+| `material-symbols-fonts` | icon set |
+| `cascadia-code-nerd-fonts` | monospace font |
 
 Install the **development** packages for each dependency via your distro's package manager.
 
@@ -51,7 +56,7 @@ Install the **development** packages for each dependency via your distro's packa
 | `swappy` | screenshot editor |
 | `wl-clipboard` | clipboard access (`wl-copy`, `wl-paste`) |
 | `cliphist` | clipboard history (powered by `wl-clipboard`) |
-| [`caelestia-cli-mango`](https://github.com/Ackerman-00/caelestia-cli-mango) | colour scheme & wallpaper management (`caelestia scheme set`, `caelestia wallpaper`). MangoWM fork of `caelestia-dots/cli` (no Hyprland coupling); install via `pip install --user -e <repo>` or a future COPR package. Generates colors from wallpapers via `materialyoucolor` (not `matugen`). |
+| [`caelestia-cli-mango`](https://github.com/Ackerman-00/caelestia-cli-mango) | colour scheme & wallpaper management (`caelestia scheme set`, `caelestia wallpaper`). MangoWM fork of `caelestia-dots/cli` (no Hyprland coupling); available as the `caelestia-cli-mango` COPR package or via `pip install --user -e <repo>`. Generates colors from wallpapers via `materialyoucolor` (not `matugen`). |
 | `libnotify` | desktop notifications (`notify-send`) |
 | `procps` | process monitoring (`pidof`) |
 | `util-linux` | disk info (`lsblk`) |
@@ -79,7 +84,7 @@ Install the **development** packages for each dependency via your distro's packa
 | `tailscale` / `netbird` / `warp-cli` | VPN provider status in the network pane (only if used) |
 | `fish` | calculator integration shell |
 
-### System-wide Install
+### Manual Install (CMake)
 
 Builds the C++ QML plugin and installs everything system-wide.
 
@@ -90,11 +95,30 @@ cd caelestia-shell-mango
 cmake -B build -G Ninja \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=/ \
-  -DINSTALL_QSCONFDIR=/etc/xdg/quickshell/caelestia
+  -DENABLE_MODULES="extras;plugin;shell" \
+  -DINSTALL_LIBDIR=/usr/lib64/caelestia \
+  -DINSTALL_QMLDIR=/usr/lib64/qt6/qml \
+  -DINSTALL_QSCONFDIR=/usr/share/caelestia-shell
 
 cmake --build build
 sudo cmake --install build
 ```
+
+Then create the `caelestia-shell` wrapper used by IPC calls, keybinds and autostart
+(the Fedora package installs the same wrapper automatically):
+
+```sh
+sudo tee /usr/bin/caelestia-shell > /dev/null << 'EOF'
+#!/bin/bash
+export CAELESTIA_LIB_DIR="/usr/lib64/caelestia"
+exec /usr/bin/qs -p "/usr/share/caelestia-shell" "$@"
+EOF
+sudo chmod +x /usr/bin/caelestia-shell
+```
+
+Adjust `INSTALL_LIBDIR`/`INSTALL_QMLDIR`/`INSTALL_QSCONFDIR` for your distro
+(Fedora uses `/usr/lib64`; Debian/Arch typically `/usr/lib`) and mirror the paths
+inside the wrapper script above.
 
 ### Nix Build
 
@@ -124,6 +148,9 @@ This installs `caelestia-shell` to `~/.nix-profile/bin/`, placing it in your PAT
 ---
 
 ## MangoWM Config
+
+> **Need MangoWM's dotfiles/keybinds?** The full compositor configuration (keybinds, rules,
+> monitor setup, `mango_core.conf`) lives in [mango-config](https://github.com/Ackerman-00/mango-config.git) — head over there.
 
 ### env.conf
 
@@ -223,7 +250,9 @@ Open the settings/control center window.
 ### wallpaper
 
 Manage wallpapers. All functions use the configured `paths.wallpaperDir`
-(see [Paths](#paths)) — no hardcoded directory.
+(see [Paths](#paths)) — no hardcoded directory. The folder can also be picked
+manually from **Settings → Appearance → Background → Wallpaper folder** (writes the
+same `paths.wallpaperDir` config key).
 
 | Function | Signature | Description |
 |----------|-----------|-------------|
@@ -370,7 +399,7 @@ Edit `~/.config/caelestia/shell.json` (must be created manually).
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `paths.wallpaperDir` | `~/Pictures/Wallpapers` | Wallpaper directory (source of truth for wallpaper `list`/`random`/`set`; can be set from Settings → Appearance → Wallpaper folder) |
+| `paths.wallpaperDir` | `~/Pictures/Wallpapers` | Wallpaper directory (source of truth for wallpaper `list`/`random`/`set`; can be set from Settings → Appearance → Background → Wallpaper folder) |
 | `paths.lyricsDir` | `~/Music/lyrics/` | MPRIS lyrics directory |
 | `paths.sessionGif` | `root:/assets/kurukuru.gif` | Session menu animation |
 | `paths.mediaGif` | `root:/assets/bongocat.gif` | Media player animation |
