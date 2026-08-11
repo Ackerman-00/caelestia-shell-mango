@@ -2,9 +2,6 @@
 //@ pragma Env QSG_RENDER_LOOP=threaded
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
 //@ pragma DefaultEnv XDG_DATA_DIRS=/usr/local/share:/usr/share
-//@ if isEnvSet("XDG_DATA_DIRS") && !env("XDG_DATA_DIRS").split(":").includes("/usr/share")
-//@ pragma Env XDG_DATA_DIRS=/usr/local/share:/usr/share
-//@ endif
 
 import "modules"
 import "modules/drawers"
